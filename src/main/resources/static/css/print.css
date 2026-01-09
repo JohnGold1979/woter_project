@@ -1,0 +1,22 @@
+   body { font-size: 14px; }
+        .sidebar { width: 200px; }
+        .content { flex-grow: 1; }
+        .client-form input { margin-bottom: 5px; }
+        .right-panel { width: 220px; }
+        .bottom-panel { height: 150px; overflow-y: auto; background: #f8f9fa; border-top: 1px solid #ddd; padding: 5px; }
+        .table-wrapper { max-height: 400px; overflow-y: auto; }
+        .table-private td { background-color: #d4edda !important; }
+        .table-private:hover td { background-color: #c8e6c9 !important; }
+
+
+.sidebar .nav-link:hover {
+         background-color: #f8f9fa;
+         color: #0d6efd !important;
+         border-radius: 8px;
+         }
+.sidebar .nav-link.active {
+         background-color: #e9f2ff;
+         font-weight: 600;
+         color: #0d6efd !important;
+         border-radius: 8px;
+         }

@@ -1,0 +1,60 @@
+body {
+  font-size: 12px;
+
+}
+.sidebar { width: 200px; }
+.content { flex-grow: 1; }
+.client-form input { margin-bottom: 5px; }
+.right-panel { width: 220px; }
+.bottom-panel { height: 150px; overflow-y: auto; background: #f8f9fa; border-top: 1px solid #ddd; padding: 5px; }
+.table-wrapper { max-height: 400px; overflow-y: auto; }
+.table-private td { background-color: #d4edda !important; }
+.table-ind     td { background-color: #FF8E64 !important; }
+.table-private:hover td { background-color: #c8e6c9 !important; }
+
+.sidebar .nav-link:hover {
+         background-color: #f8f9fa;
+         color: #0d6efd !important;
+         border-radius: 8px;
+         }
+.sidebar .nav-link.active {
+         background-color: #e9f2ff;
+         font-weight: 600;
+         color: #0d6efd !important;
+         border-radius: 8px;
+         }
+
+#stations-list {
+    display: none;
+    transition: all 0.2s ease;
+}
+#stations-list.show {
+    display: block;
+}
+
+/* Скрыто на ПК, видно только на мобильных */
+.catalog-menu {
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+.catalog-menu.show {
+    display: block;
+}
+
+.catalog-menu .nav-link {
+    padding: 8px 10px;
+    border-radius: 4px;
+    color: #333;
+}
+
+.catalog-menu .nav-link:hover {
+    background: #eef5ff;
+    color: #0d6efd;
+}
+
+@media (min-width: 992px) {
+    .catalog-menu {
+        display: none !important;
+    }
+}

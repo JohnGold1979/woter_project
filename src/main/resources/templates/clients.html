@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Клиенты - Водоканал</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="d-flex flex-column vh-100">
+
+<!-- Навигационное меню -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <div class="container-fluid">
+
+        <a class="navbar-brand" href="#">
+            💧 Водоканал - Клиенты
+            <span class="text-info"><b th:text="${stationName}"></b></span>
+        </a>
+
+        <!-- Бургер -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Меню">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Контейнер меню -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+
+            <!-- Левые пункты -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                <!-- Главная -->
+                <li class="nav-item">
+                    <a class="nav-link active" href="/">Главная</a>
+                </li>
+
+                <!-- ========= СПРАВОЧНИК (Дропдаун) ========= -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="catalogDropdown"
+                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        📚 Справочник
+                    </a>
+
+                    <ul class="dropdown-menu" aria-labelledby="catalogDropdown">
+                        <li><a class="dropdown-item" href="/stations">Станции</a></li>
+                        <li><a class="dropdown-item" href="/houses">Дома</a></li>
+                        <li><a class="dropdown-item" href="/streets">Улицы</a></li>
+                        <li><a class="dropdown-item" href="/clients">Клиенты</a></li>
+                        <li><a class="dropdown-item" href="/tariffs">Тарифы</a></li>
+                        <li><a class="dropdown-item" href="/reports">Отчёты</a></li>
+                    </ul>
+                </li>
+
+            </ul>
+
+            <!-- Правая часть -->
+            <div class="d-flex">
+                <a class="btn btn-outline-light btn-sm me-2" href="/profile">Профиль</a>
+                <a class="btn btn-danger btn-sm" href="/logout">Выход</a>
+            </div>
+
+        </div>
+
+    </div>
+</nav>
+
+<!-- Верхняя панель: Справочник + Период -->
+<div class="bg-light border-bottom p-2">
+
+
+    <!-- ===== Установка периода ===== -->
+    <div class="d-flex align-items-center flex-wrap gap-2">
+        <label class="me-2 fw-bold">Установка периода:</label>
+
+        <!-- Месяц -->
+        <select id="monthSelect" class="form-select w-auto">
+            <option value="1">Январь</option>
+            <option value="2">Февраль</option>
+            <option value="3">Март</option>
+            <option value="4">Апрель</option>
+            <option value="5">Май</option>
+            <option value="6">Июнь</option>
+            <option value="7">Июль</option>
+            <option value="8">Август</option>
+            <option value="9">Сентябрь</option>
+            <option value="10">Октябрь</option>
+            <option value="11">Ноябрь</option>
+            <option value="12">Декабрь</option>
+        </select>
+
+        <!-- Год -->
+        <select id="yearSelect" class="form-select w-auto">
+            <option value="2010">2010</option>
+            <option value="2011">2011</option>
+            <option value="2012">2012</option>
+            <option value="2013">2013</option>
+            <option value="2014">2014</option>
+            <option value="2015">2015</option>
+            <option value="2016">2016</option>
+            <option value="2017">2017</option>
+            <option value="2018">2018</option>
+            <option value="2019">2019</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+        </select>
+    </div>
+
+</div>
+
+
+
+<!-- Основное рабочее окно -->
+<div class="d-flex flex-grow-1">
+
+    <!-- Левое меню -->
+    <div class="sidebar d-flex flex-column bg-white border-end shadow-sm" style="width: 230px; min-height: 100vh;">
+        <div class="p-3 border-bottom">
+            <h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-droplet"></i> Водоканал</h5>
+        </div>
+        <ul class="nav flex-column mt-2">
+            <li class="nav-item mt-2 border-top pt-2 text-muted small px-3">Клиенты</li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/clients/getBishClients">
+                    <i class="fa-solid fa-users me-2 text-primary"></i> Бишкек
+                </a>
+            </li>
+            <li class="nav-item">
+                <a id="stations-toggle" class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="#">
+                    <i class="fa-solid fa-water me-2 text-info"></i> Станции
+                </a>
+                <ul class="nav flex-column ms-4 mt-1 collapse" id="stations-list"></ul>
+            </li>
+            <li class="nav-item mt-2 border-top pt-2 text-muted small px-3">Финансы</li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/saldo">
+                    <i class="fa-solid fa-scale-balanced me-2 text-success"></i> Сальдо
+                </a>
+
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/pay">
+                    <i class="fa-solid fa-credit-card me-2 text-success"></i> Оплаты
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/subsidy">
+                    <i class="fa-solid fa-hand-holding-dollar me-2 text-warning"></i> Субсидии
+                </a>
+            </li>
+
+            <li class="nav-item mt-2 border-top pt-2 text-muted small px-3">Учёт</li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/indications">
+                    <i class="fa-solid fa-gauge me-2 text-danger"></i> Показания
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/print/select">
+                    <i class="fa-solid fa-file-lines me-2 text-primary"></i> Отчёты
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/events">
+                    <i class="fa-solid fa-bell me-2 text-secondary"></i> События
+                </a>
+            </li>
+        </ul>
+    </div>
+
+
+
+    <!-- Центр + форма + таблица -->
+    <!-- Центр + форма + таблица -->
+    <div class="content d-flex flex-column p-2">
+
+        <!-- Форма клиента -->
+
+        <div class="client-form border p-3 mb-3 bg-white rounded shadow-sm">
+            <div class="row g-2">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small">Лицевой счёт</label>
+                    <input type="text" id="searchAccount" class="form-control form-control-sm" placeholder="pers_account">
+                </div>
+                <div class="col-6 col-md-4">
+                    <label class="form-label small">ФИО</label>
+                    <input type="text" id="searchName" class="form-control form-control-sm" placeholder="client_name">
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблица клиентов -->
+        <!-- Таблица клиентов -->
+        <div class="bg-white p-3 rounded shadow-sm d-flex flex-column" style="height: 80vh;">
+            <!-- Обёртка для таблицы с прокруткой -->
+            <div class="table-responsive flex-grow-1" style="overflow-y: auto;">
+                <div class="mt-1 mb-1 fs-6">
+                    Список клиентов станции:
+                    <span class="text-primary fw-bold" th:text="${stationName}"></span>
+                </div>
+                <table id="clientsTab" class="table table-sm table-hover align-middle">
+                    <thead class="table-light" style="position: sticky; top: 0; z-index: 2; background: #f8f9fa;">
+                    <tr>
+                        <th width="4%" scope="col">Кв.</th>
+                        <th width="10%" scope="col">Л. / С.</th>
+                        <th width="20%" scope="col">Фамилия</th>
+                        <th scope="col">Адрес</th>
+                        <th scope="col">Чел</th>
+                        <th scope="col">Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="client : ${clients}"
+                        th:classappend="(${client.clientType} == 2 or ${client.clientType} == '2' ? 'table-private ' : '')
+                                      + (${client.counterInId} == 1 ? 'table-ind' : '')">
+                        <td th:text="${client.flat}"></td>
+                        <td th:text="${client.personalAccount}"></td>
+                        <td th:text="${client.clientName}"></td>
+                        <td th:text="${client.address}"></td>
+                        <td th:text="${client.cntPersResult}"></td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-outline-primary addEditClient-outline-btn">Ред-ть</button>
+                                <button class="btn btn-outline-primary">Квитанция</button>
+                                <button class="btn btn-outline-success pay-outline-btn">Опл</button>
+                                <button class="btn btn-outline-success subsidy-outline-btn">Суб</button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Нижняя панель (фиксируется внизу блока) -->
+            <div class="border-top pt-2 mt-2 d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Всего клиентов: <span th:text="${clients.size()}"></span></span>
+                <div>
+                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addClientModal">Добавить клиента</button>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- Модальное окно для отчётов -->
+<div class="modal fade" id="reportsModal" tabindex="-1" aria-labelledby="reportsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border border-primary shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="reportsModalLabel">Выбор отчета (общие отчеты)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary">Дислокация домов</button>
+                    <button class="btn btn-outline-primary">Оборотные ведомости</button>
+                    <button class="btn btn-outline-primary">Поступление платежей</button>
+                    <a class="btn btn-outline-primary" th:href="@{/print/select}">Печать квитанций</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Выход</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для Оплаты -->
+<div class="modal fade" id="PayClient" tabindex="-1" role="dialog" aria-labelledby="PayClientLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="PayClientLabel">Оплата клиента</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть">
+
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="payForm" class="row g-3">
+                    <!-- Лицевой счёт -->
+                    <div class="col-md-4">
+                        <label for="persAcc" class="form-label">Лицевой счёт</label>
+                        <input type="text" class="form-control" id="persAcc" readonly>
+                    </div>
+
+                    <!-- ФИО -->
+                    <div class="col-md-8">
+                        <label for="clName" class="form-label">ФИО</label>
+                        <input type="text" class="form-control" id="clName" readonly>
+                    </div>
+
+                    <!-- Адрес -->
+                    <div class="col-12">
+                        <label for="address" class="form-label">Адрес</label>
+                        <input type="text" class="form-control" id="address" readonly>
+                    </div>
+
+                    <!-- Оплата -->
+                    <div class="col-md-4">
+                        <label for="clPay" class="form-label">Оплата</label>
+                        <input type="number" class="form-control" id="clPay" min="0" step="0.01" placeholder="Введите сумму">
+                    </div>
+
+                    <!-- Налог -->
+                    <div class="col-md-4">
+                        <label for="tax" class="form-label">Налог</label>
+                        <input type="text" class="form-control" id="tax" readonly>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="submitPaymentBtn">Принять оплату</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для Суюсидий -->
+<div class="modal fade" id="PayClientSubsidy" tabindex="-1" role="dialog" aria-labelledby="PayClientLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="PayClientLabelSub">Оплата Субсидии</h5>
+                <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Закрыть">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="payFormSub" class="row g-3">
+                    <!-- Лицевой счёт -->
+                    <div class="col-md-4">
+                        <label for="persAcc" class="form-label">Лицевой счёт</label>
+                        <input type="text" class="form-control" id="persAccSub" readonly>
+                    </div>
+
+                    <!-- ФИО -->
+                    <div class="col-md-8">
+                        <label for="clName" class="form-label">ФИО</label>
+                        <input type="text" class="form-control" id="clNameSub" readonly>
+                    </div>
+
+                    <!-- Адрес -->
+                    <div class="col-12">
+                        <label for="address" class="form-label">Адрес</label>
+                        <input type="text" class="form-control" id="addressSub" readonly>
+                    </div>
+
+                    <!-- Оплата -->
+                    <div class="col-md-4">
+                        <label for="clPay" class="form-label">Оплата</label>
+                        <input type="number" class="form-control" id="clPaySub" min="0" step="0.01" placeholder="Введите сумму">
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="submitPaymentSubBtn">Принять оплату</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавить клиента-->
+<div class="modal fade" id="AddEditClient" tabindex="-1" aria-labelledby="addClientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="addClientModalLabel">Добавить / Редактировать клиента</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <form id="addClientForm" class="p-3">
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <!-- Лицевой счёт -->
+                        <div class="col-md-4">
+                            <label for="persAccEditAdd" class="form-label">Лицевой счёт</label>
+                            <input type="text" class="form-control" id="persAccEditAdd" name="persAccEditAdd">
+                        </div>
+
+                        <!-- ФИО -->
+                        <div class="col-md-8">
+                            <label for="clNameEditAdd" class="form-label">ФИО</label>
+                            <input type="text" class="form-control" id="clNameEditAdd" name="clNameEditAdd">
+                        </div>
+
+                        <!-- Улица -->
+                        <div class="col-md-8">
+                            <label for="selectStreet" class="form-label">Улица</label>
+                            <select id="selectStreet" class="form-select" name="streetId">
+                                <option value="">Выберите улицу</option>
+                                <option th:each="street : ${streets}"
+                                        th:value="${street.streetId}"
+                                        th:text="${street.streetName}"></option>
+                            </select>
+                        </div>
+
+                        <!-- Дом -->
+                        <div class="col-md-4">
+                            <label for="house" class="form-label">Дом</label>
+                            <input type="text" class="form-control" id="house" name="house" placeholder="10А">
+                        </div>
+
+                        <!-- Квартира -->
+                        <div class="col-md-4">
+                            <label for="flat" class="form-label">Квартира</label>
+                            <input type="text" class="form-control" id="flat" name="flat" placeholder="12">
+                        </div>
+
+                        <!-- Количество -->
+                        <div class="col-md-4">
+                            <label for="cP" class="form-label">Кол-во человек</label>
+                            <input type="number" class="form-control" id="cP" name="cntPersons" placeholder="3">
+                        </div>
+
+                        <!-- Фактическое -->
+                        <div class="col-md-4">
+                            <label for="cPF" class="form-label">Факт. кол-во</label>
+                            <input type="number" class="form-control" id="cPF" name="cntPersonsFact" placeholder="2">
+                        </div>
+
+                        <!-- Радио: тип клиента -->
+                        <div class="col-md-6">
+                            <label class="form-label d-block">Тип клиента</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="clientType" id="typeFlat" value="1" checked>
+                                <label class="form-check-label" for="typeFlat">Квартирный</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="clientType" id="typePrivate" value="2">
+                                <label class="form-check-label" for="typePrivate">Частный</label>
+                            </div>
+                        </div>
+
+                        <!-- Радио: водомер -->
+                        <div class="col-md-6">
+                            <label class="form-label d-block">Наличие водомера</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="counterIn" id="hasCounter" value="1" checked>
+                                <label class="form-check-label" for="hasCounter">Есть</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="counterIn" id="noCounter" value="0">
+                                <label class="form-check-label" for="noCounter">Нет</label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/woterclients.js"></script>
+<script src="/js/jquery.min.js"></script>
+
+</body>
+</html>

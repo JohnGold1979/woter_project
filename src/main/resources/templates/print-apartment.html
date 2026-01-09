@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Печать — квартирный сектор</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-3">
+<h4>Печать — квартирный сектор</h4>
+<p>Период: <span th:text="${month}"></span> / <span th:text="${year}"></span></p>
+
+<table class="table table-sm table-bordered">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Лиц. счёт</th>
+        <th>ФИО</th>
+        <th>Адрес</th>
+        <th>Сумма</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="r : ${receipts}">
+        <td th:text="${r.id}"></td>
+        <td th:text="${r.persAccount}"></td>
+        <td th:text="${r.clientName}"></td>
+        <td th:text="${r.addressHo}"></td>
+        <td th:text="${r.summa}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="mt-3">
+    <a th:href="@{'/print/apartment/pdf'(month=${month}, year=${year})}"
+       class="btn btn-primary"
+       target="_blank">
+        Печать PDF
+    </a>
+    <a th:href="@{/print/apartment/pdf(month=${month}, year=${year})}" class="btn btn-primary">Генерировать PDF</a>
+    <a href="/print/select" class="btn btn-secondary">Назад</a>
+</div>
+
+</body>
+</html>

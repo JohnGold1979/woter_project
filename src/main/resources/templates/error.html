@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ошибка</title>
+</head>
+<body style="font-family: sans-serif; padding: 30px;">
+<h2 style="color:red;">Произошла ошибка</h2>
+<p th:text="${errorMessage}">Неизвестная ошибка.</p>
+<a href="/stations">Вернуться</a>
+</body>
+</html>

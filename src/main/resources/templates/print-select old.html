@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Печать квитанций — выбор</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body class="p-3">
+
+<div class="container">
+    <h4>Печать квитанций — выбор</h4>
+
+    <form id="printForm" method="get" class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label">Месяц</label>
+            <select name="month" class="form-select">
+                <option th:each="m,iterStat : ${months}"
+                        th:value="${iterStat.index + 1}"
+                        th:text="${m}"
+                        th:selected="${(iterStat.index + 1) == selectedMonth}"></option>
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <label class="form-label">Год</label>
+            <select name="year" class="form-select">
+                <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                        th:selected="${y == selectedYear}"></option>
+            </select>
+        </div>
+
+        <div class="col-12 mt-3">
+            <div class="d-grid gap-2">
+                <button type="submit" th:formaction="@{/print/apartment}" class="btn btn-primary">Печать квартирного сектора</button>
+                <button type="submit" th:formaction="@{/print/private}" class="btn btn-primary">Печать частного сектора</button>
+                <button type="submit" th:formaction="@{/print/wodometers}" class="btn btn-primary">Печать водомеров</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="mt-3">
+        <a href="/clients" class="btn btn-secondary">Отмена</a>
+    </div>
+</div>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

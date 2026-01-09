@@ -1,0 +1,83 @@
+body {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.main-container {
+            display: flex;
+            flex-grow: 1;
+            flex-wrap: wrap;
+}
+
+.sidebar { width: 200px; }
+.content { flex-grow: 1; }
+.client-form input { margin-bottom: 5px; }
+.right-panel { width: 220px; }
+  /* Нижний протокол */
+.bottom-panel {
+        background: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        }
+
+.bottom-panel table {
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+.bottom-panel th, .bottom-panel td {
+            white-space: nowrap;
+        }
+
+.table-wrapper {
+     flex-grow: 1;
+     overflow-y: auto;
+}
+
+.table-private td { background-color: #d4edda !important; }
+.table-private:hover td { background-color: #c8e6c9 !important; }
+
+.table-wrapper {
+    max-height: 70vh;     /* ограничиваем высоту */
+    overflow-y: auto;     /* вертикальный скролл */
+    overflow-x: auto;     /* горизонтальный скролл */
+}
+
+/* фиксируем заголовок */
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f8f9fa;
+}
+
+/* фиксируем футер */
+.table tfoot td {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: #e9ecef;
+    font-weight: bold;
+}
+.sidebar .nav-link:hover {
+         background-color: #f8f9fa;
+         color: #0d6efd !important;
+         border-radius: 8px;
+         }
+.sidebar .nav-link.active {
+         background-color: #e9f2ff;
+         font-weight: 600;
+         color: #0d6efd !important;
+         border-radius: 8px;
+ }
+ #stations-list {
+     display: none;
+     transition: all 0.2s ease;
+ }
+ #stations-list.show {
+     display: block;
+ }

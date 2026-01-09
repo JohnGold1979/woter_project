@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="utf-8"/><title>Печать — Водомеров</title></head>
+<body class="p-3">
+<h4>Печать — Водомеров</h4>
+<p>Период: <span th:text="${month}"></span> / <span th:text="${year}"></span></p>
+
+<!-- тут далее будут параметры печати, фильтры и кнопка "Генерировать PDF" -->
+<a href="/print/select" class="btn btn-secondary">Назад</a>
+</body>
+</html>
