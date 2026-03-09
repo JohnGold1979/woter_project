@@ -67,20 +67,50 @@ public class SaldoController {
         model.addAttribute("totalCredetOut", total.getCredetOut());
         model.addAttribute("totalPersonsOut", total.getPersonsOut());
 
-        // 4️⃣ Итоги слева / справа по типам клиентов
-        SaldoTypeDTO typeTotal = saldoRepository.totalByTypes(month, year, stationId);
+        //Итоги слева / справа по типам клиентов
+        SaldoTypeDTO typeTotalFlat = saldoRepository.totalByTypes(month, year, stationId, 1);
+        Double flatSaldoIn = typeTotalFlat.getRolledSaldoIn();
+        Double flatSaldoOut = typeTotalFlat.getRolledSaldoOut();
+        Double flatTotalCharged = typeTotalFlat.getTotalCharged();
+        Double flatTotalPay = typeTotalFlat.getTotalPayd();
 
-        model.addAttribute("totalFlatCharged", typeTotal.getTotalFlatChargedFlat());
-        model.addAttribute("totalFlatPayd", typeTotal.getTotalFlatPaydFlat());
-        model.addAttribute("totalFlatSaldo", typeTotal.getRolledSaldoOutFlat());
+        model.addAttribute("totalFlatSaldoIn", flatSaldoIn);
+        model.addAttribute("totalFlatSaldoOut", flatSaldoOut);
+        model.addAttribute("totalFlatCharged", flatTotalCharged);
+        model.addAttribute("totalFlatPayd", flatTotalPay);
 
-        model.addAttribute("totalPrivateCharged", typeTotal.getPrivateCharged());
-        model.addAttribute("totalPrivatePayd", typeTotal.getPrivatePayd());
-        model.addAttribute("totalPrivateSaldo", typeTotal.getPrivateSaldo());
+        SaldoTypeDTO typeTotalPrivate = saldoRepository.totalByTypes(month, year, stationId, 2);
+        Double privateSaldoIn = typeTotalFlat.getRolledSaldoIn();
+        Double privateSaldoOut = typeTotalFlat.getRolledSaldoOut();
+        Double privateTotalCharged = typeTotalFlat.getTotalCharged();
+        Double privateTotalPay = typeTotalFlat.getTotalPayd();
 
-        model.addAttribute("totalMeterCharged", typeTotal.getMeterCharged());
-        model.addAttribute("totalMeterPayd", typeTotal.getMeterPayd());
-        model.addAttribute("totalMeterSaldo", typeTotal.getMeterSaldo());
+        model.addAttribute("totalPrivateSaldoIn", privateSaldoIn);
+        model.addAttribute("totalPrivateSaldoOut", privateSaldoOut);
+        model.addAttribute("totalPrivateCharged", privateTotalCharged);
+        model.addAttribute("totalPrivatePayd", privateTotalPay);
+
+        SaldoTypeDTO typeTotalMeter = saldoRepository.totalByTypesMeter(month, year, stationId);
+        Double materSaldoIn = typeTotalMeter.getRolledSaldoInMeter();
+        Double materSaldoOut = typeTotalMeter.getRolledSaldoOutMeter();
+        Double materTotalCharged = typeTotalMeter.getTotalChargedMeter();
+        Double materTotalPay = typeTotalMeter.getTotalPaydMeter();
+
+        model.addAttribute("totalMeterSaldoIn", materSaldoIn);
+        model.addAttribute("totalMeterSaldoOut", materSaldoOut);
+        model.addAttribute("totalMeterCharged", materTotalCharged);
+        model.addAttribute("totalMeterPayd", materTotalPay);
+
+        var totalSaldoIn = roundToTwoDecimals(flatSaldoIn + privateSaldoIn + materSaldoIn);
+        var totalSaldoOut = roundToTwoDecimals(flatSaldoOut + privateSaldoOut + materSaldoOut);
+        var totalCharged = roundToTwoDecimals(flatTotalCharged + privateTotalCharged + materTotalCharged);
+        var totalPay = roundToTwoDecimals(flatTotalPay + privateTotalPay + materTotalPay);
+        
+        model.addAttribute("totalSaldoIn", totalSaldoIn);
+        model.addAttribute("totalSaldoOut", totalSaldoOut);
+        model.addAttribute("totalCharged", totalCharged);
+        model.addAttribute("totalPayd", totalPay);
+
 
         return "saldo";
     }
@@ -95,16 +125,16 @@ public class SaldoController {
         if (year == null) year = LocalDate.now().getYear();
         if (stationId == null) stationId = 11;
 
-        // 1️⃣ Основная таблица сальдо
+        // Основная таблица сальдо
         List<SaldoDTO> saldo = saldoRepository.findAll(month, year, stationId);
         model.addAttribute("saldos", saldo);
 
-        // 2️⃣ Название станции
+        // Название станции
         String stationName = saldoRepository.getStationNameById(stationId);
         model.addAttribute("stationName", stationName);
         model.addAttribute("stationId", stationId);
 
-        // 3️⃣ Общие итоги по всей станции
+        // Общие итоги по всей станции
         SaldoTotalDTO total = saldoRepository.totalSaldo(month, year, stationId);
         model.addAttribute("totalDebetIn", total.getDebetIn());
         model.addAttribute("totalCredetIn", total.getCredetIn());
@@ -118,20 +148,24 @@ public class SaldoController {
         model.addAttribute("totalCredetOut", total.getCredetOut());
         model.addAttribute("totalPersonsOut", total.getPersonsOut());
 
-        // 4️⃣ Итоги слева / справа по типам клиентов
-        SaldoTypeDTO typeTotal = saldoRepository.totalByTypes(month, year, stationId);
+        // Итоги слева / справа по типам клиентов
+        SaldoTypeDTO typeTotalFlat = saldoRepository.totalByTypes(month, year, stationId, 1);
+        model.addAttribute("totalFlatSaldoIn", typeTotalFlat.getRolledSaldoIn());
+        model.addAttribute("totalFlatSaldoOut", typeTotalFlat.getRolledSaldoOut());
+        model.addAttribute("totalFlatCharged", typeTotalFlat.getTotalCharged());
+        model.addAttribute("totalFlatPayd", typeTotalFlat.getTotalPayd());
 
-        model.addAttribute("totalFlatCharged", typeTotal.getTotalFlatChargedFlat());
-        model.addAttribute("totalFlatPayd", typeTotal.getTotalFlatPaydFlat());
-        model.addAttribute("totalFlatSaldo", typeTotal.getRolledSaldoOutFlat());
+        SaldoTypeDTO typeTotalPrivate = saldoRepository.totalByTypes(month, year, stationId, 2);
+        model.addAttribute("totalPrivateCharged", typeTotalPrivate.getRolledSaldoIn());
+        model.addAttribute("totalPrivatePayd", typeTotalPrivate.getRolledSaldoOut());
+        model.addAttribute("totalPrivateSaldo", typeTotalPrivate.getTotalCharged());
+        model.addAttribute("totalFlatPayd", typeTotalFlat.getTotalPayd());
 
-        model.addAttribute("totalPrivateCharged", typeTotal.getPrivateCharged());
-        model.addAttribute("totalPrivatePayd", typeTotal.getPrivatePayd());
-        model.addAttribute("totalPrivateSaldo", typeTotal.getPrivateSaldo());
-
-        model.addAttribute("totalMeterCharged", typeTotal.getMeterCharged());
-        model.addAttribute("totalMeterPayd", typeTotal.getMeterPayd());
-        model.addAttribute("totalMeterSaldo", typeTotal.getMeterSaldo());
+        SaldoTypeDTO typeTotalMeter = saldoRepository.totalByTypesMeter(month, year, stationId);
+        model.addAttribute("totalMeterSaldoIn", typeTotalMeter.getRolledSaldoInMeter());
+        model.addAttribute("totalMeterSaldoOut", typeTotalMeter.getRolledSaldoOutMeter());
+        model.addAttribute("totalMeterCharged", typeTotalMeter.getTotalChargedMeter());
+        model.addAttribute("totalMeterPayd", typeTotalMeter.getTotalPaydMeter());
 
         return "saldo";
     }
@@ -147,5 +181,9 @@ public class SaldoController {
         }
         System.out.println("jumpMonth " + result);
         return ResponseEntity.ok(result);
+    }
+
+    public static double roundToTwoDecimals(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 }

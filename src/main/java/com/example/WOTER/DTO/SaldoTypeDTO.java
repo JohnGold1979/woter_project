@@ -3,19 +3,15 @@ import lombok.Data;
 
 @Data
 public class SaldoTypeDTO {
-    // Квартиры
-    private Double rolledSaldoInFlat;
-    private Double rolledSaldoOutFlat;
-    private Double totalFlatChargedFlat;
-    private Double totalFlatPaydFlat;
 
-    // Частные дома
-    private Double privateCharged;
-    private Double privatePayd;
-    private Double privateSaldo;
+    private Double rolledSaldoIn;
+    private Double rolledSaldoOut;
+    private Double totalCharged;
+    private Double totalPayd;
 
-    // Водомеры
-    private Double meterCharged;
-    private Double meterPayd;
-    private Double meterSaldo;
+   // Водомеры
+    private Double rolledSaldoInMeter;
+    private Double rolledSaldoOutMeter;
+    private Double totalChargedMeter;
+    private Double totalPaydMeter;
 }

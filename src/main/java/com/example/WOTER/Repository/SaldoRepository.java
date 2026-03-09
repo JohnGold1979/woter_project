@@ -122,28 +122,54 @@ public class SaldoRepository {
     }
 
 
-    public SaldoTypeDTO totalByTypes(int month, int year, int stationId) {
+    public SaldoTypeDTO totalByTypesMeter(int month, int year, int stationId) {
         String sql = """
-          select     (coalesce(round(sum(debet_in),2),0)  - coalesce(round(sum(credet_in),2),0))  as rolledSaldoInFlat,
-                      coalesce(round(sum(debet_out),2),0) - coalesce(round(sum(credet_out),2),0) as rolledSaldoOutFlat,
-                      coalesce(sum(charged_money),0) as totalFlatChargedFlat,
-                      coalesce(sum(payd_in),0) as totalFlatPaydFlat
+          select     (coalesce(round(sum(debet_in),2),0)  - coalesce(round(sum(credet_in),2),0))  as rolledSaldoIn,
+                      coalesce(round(sum(debet_out),2),0) - coalesce(round(sum(credet_out),2),0) as rolledSaldoOut,
+                      coalesce(sum(charged_money),0) as totalCharge,
+                      coalesce(sum(payd_in),0) as totalPayd
           from wot_saldo ws
           join wot_clients wc on ws.client_id = wc.id
           join wot_address wa on wa.client_id = wc.id
           where ws.month_id = ?
           and ws.year_id = ?
           and wa.station_id = ?
-          and wc.client_type_id = 1
+          and wc.client_type_id in (1,2)
+          and wc.counter_in_id = 1
     """;
 
         return jdbcTemplate.queryForObject(sql, new Object[]{month, year, stationId}, (rs, rowNum) -> {
             SaldoTypeDTO dto = new SaldoTypeDTO();
-            dto.setRolledSaldoInFlat(rs.getDouble("rolledSaldoInFlat"));
-            dto.setRolledSaldoOutFlat(rs.getDouble("rolledSaldoOutFlat"));
-            dto.setTotalFlatChargedFlat(rs.getDouble("totalFlatChargedFlat"));
-            dto.setTotalFlatPaydFlat(rs.getDouble("totalFlatPaydFlat"));
+            dto.setRolledSaldoInMeter(rs.getDouble("rolledSaldoIn"));
+            dto.setRolledSaldoOutMeter(rs.getDouble("rolledSaldoOut"));
+            dto.setTotalChargedMeter(rs.getDouble("totalCharge"));
+            dto.setTotalPaydMeter(rs.getDouble("totalPayd"));
+            return dto;
+        });
+    }
 
+    public SaldoTypeDTO totalByTypes(int month, int year, int stationId, int clientTypeId) {
+        String sql = """
+          select     (coalesce(round(sum(debet_in),2),0)  - coalesce(round(sum(credet_in),2),0))  as rolledSaldoIn,
+                      coalesce(round(sum(debet_out),2),0) - coalesce(round(sum(credet_out),2),0) as rolledSaldoOut,
+                      coalesce(sum(charged_money),0) as totalCharge,
+                      coalesce(sum(payd_in),0) as totalPayd
+          from wot_saldo ws
+          join wot_clients wc on ws.client_id = wc.id
+          join wot_address wa on wa.client_id = wc.id
+          where ws.month_id = ?
+          and ws.year_id = ?
+          and wa.station_id = ?
+          and wc.client_type_id = ?
+          and wc.counter_in_id = 0
+    """;
+
+        return jdbcTemplate.queryForObject(sql, new Object[]{month, year, stationId, clientTypeId}, (rs, rowNum) -> {
+            SaldoTypeDTO dto = new SaldoTypeDTO();
+            dto.setRolledSaldoIn(rs.getDouble("rolledSaldoIn"));
+            dto.setRolledSaldoOut(rs.getDouble("rolledSaldoOut"));
+            dto.setTotalCharged(rs.getDouble("totalCharge"));
+            dto.setTotalPayd(rs.getDouble("totalPayd"));
             return dto;
         });
     }

@@ -231,25 +231,40 @@
         <div class="card mb-2">
             <div class="card-body p-2">
                 <strong>Квартирные:</strong>
+                <div>Сальдо в: <span th:text="${totalFlatSaldoIn}"></span></div>
+                <div>Сальдо и: <span th:text="${totalFlatSaldoOut}"></span></div>
                 <div>Начислено: <span th:text="${totalFlatCharged}"></span></div>
                 <div>Оплаты: <span th:text="${totalFlatPayd}"></span></div>
-                <div>Сальдо: <span th:text="${totalFlatSaldo}"></span></div>
             </div>
         </div>
         <div class="card mb-2">
             <div class="card-body p-2">
                 <strong>Частные:</strong>
+                <div>Сальдо в: <span th:text="${totalPrivateSaldoIn}"></span></div>
+                <div>Сальдо и: <span th:text="${totalPrivateSaldoOut}"></span></div>
                 <div>Начислено: <span th:text="${totalPrivateCharged}"></span></div>
                 <div>Оплаты: <span th:text="${totalPrivatePayd}"></span></div>
-                <div>Сальдо: <span th:text="${totalPrivateSaldo}"></span></div>
+
             </div>
         </div>
         <div class="card">
             <div class="card-body p-2">
                 <strong>Водомеры:</strong>
+                <div>Сальдо и: <span th:text="${totalMeterSaldoIn}"></span></div>
+                <div>Сальдо в: <span th:text="${totalMeterSaldoOut}"></span></div>
                 <div>Начислено: <span th:text="${totalMeterCharged}"></span></div>
                 <div>Оплаты: <span th:text="${totalMeterPayd}"></span></div>
-                <div>Сальдо: <span th:text="${totalMeterSaldo}"></span></div>
+
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body p-2">
+                <strong>Всего:</strong>
+                <div>Сальдо и: <span th:text="${totalSaldoIn}"></span></div>
+                <div>Сальдо в: <span th:text="${totalSaldoOut}"></span></div>
+                <div>Начислено: <span th:text="${totalCharged}"></span></div>
+                <div>Оплаты: <span th:text="${totalPayd}"></span></div>
+
             </div>
         </div>
     </div>
