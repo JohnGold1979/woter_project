@@ -15,6 +15,7 @@ public class HouseAllReportDTO {
     private BigDecimal debetOut;
     private BigDecimal credetOut;
     private BigDecimal subsidy;
+    private BigDecimal lateFeeOut;
 
     public HouseAllReportDTO(String houseName,
                           BigDecimal debetIn,
@@ -27,7 +28,8 @@ public class HouseAllReportDTO {
                           BigDecimal remTaxIn,
                           BigDecimal debetOut,
                           BigDecimal credetOut,
-                          BigDecimal subsidy) {
+                          BigDecimal subsidy,
+                             BigDecimal lateFeeOut) {
         this.houseName = houseName;
         this.debetIn = debetIn;
         this.credetIn = credetIn;
@@ -40,6 +42,7 @@ public class HouseAllReportDTO {
         this.debetOut = debetOut;
         this.credetOut = credetOut;
         this.subsidy = subsidy;
+        this.lateFeeOut = lateFeeOut;
     }
 
     public String getHouseName() { return houseName; }
@@ -54,6 +57,7 @@ public class HouseAllReportDTO {
     public BigDecimal getDebetOut() { return debetOut; }
     public BigDecimal getCredetOut() { return credetOut; }
     public BigDecimal getSubsidy() { return subsidy; }
+    public BigDecimal getLateFeeOut() { return lateFeeOut; }
 
     public static class IndicationsDTO {
         private Long id;

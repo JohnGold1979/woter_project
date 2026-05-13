@@ -32,8 +32,10 @@ public class ReceiptController {
                                HttpServletResponse response) throws Exception {
 
         response.setContentType("application/pdf");
-        response.setHeader("Content-Disposition", "inline; filename=apartment.pdf");
-
+        response.setHeader(
+                "Content-Disposition",
+                "inline; filename=apartment_" + month + "_" + year + ".pdf"
+        );
          List<ReceiptDTO> receipts = apartmentService.getReceiptsApartment(month, year);
 
         byte[] pdfBytes = pdfServiceAppartment.generatePdf(receipts);
@@ -49,7 +51,10 @@ public class ReceiptController {
                              HttpServletResponse response) throws Exception {
 
         response.setContentType("application/pdf");
-        response.setHeader("Content-Disposition", "inline; filename=private_receipts.pdf");
+        response.setHeader(
+                "Content-Disposition",
+                "inline; filename=private_receipts_" + month + "_" + year + ".pdf"
+        );
 
         List<ReceiptDTO> receipts = receiptService.getReceipts(month, year);
 

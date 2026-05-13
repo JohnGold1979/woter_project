@@ -70,14 +70,14 @@ public class PdfReportAccountsService {
             spacer.setSpacingBefore(1f);
             document.add(spacer);
 
-            PdfPTable table = new PdfPTable(12);
+            PdfPTable table = new PdfPTable(13);
             table.setWidthPercentage(100);
-            table.setWidths(new float[]{2f, 4f, 13f, 10f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f});
+            table.setWidths(new float[]{2f, 4f, 12f, 10f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f});
 
             // Заголовки
             String[] headers = {"Квартира","Лицевой счёт","ФИО","Адрес",
                     "Дебет нач.","Кредит нач.","Начислено","Налог 3%",
-                    "Оплачено","Субсидии","Дебет кон.","Кредит кон."};
+                    "Оплачено","Субсидии","Пеня","Дебет кон.","Кредит кон."};
             for (String h : headers) table.addCell(makeChargeHeader(h));
             table.setHeaderRows(1);
 
@@ -102,6 +102,7 @@ public class PdfReportAccountsService {
                 table.addCell(makeChargeData(toStr(row.getTaxIn())));
                 table.addCell(makeChargeData(toStr(row.getPaydIn())));
                 table.addCell(makeChargeData(toStr(row.getSubsidy())));
+                table.addCell(makeChargeData(toStr(row.getLateFee())));
                 table.addCell(makeChargeData(toStr(row.getDebetOut())));
                 table.addCell(makeChargeData(toStr(row.getCredetOut())));
 
@@ -234,14 +235,14 @@ public void generatePrivateReport(
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
 
-        PdfPTable table = new PdfPTable(12);
+        PdfPTable table = new PdfPTable(13);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{2f, 4f, 13f, 10f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f});
+        table.setWidths(new float[]{3f, 4f, 11f, 10f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f});
 
         // Заголовки
         String[] headers = {"Квартира","Лицевой счёт","ФИО","Адрес",
                 "Дебет нач.","Кредит нач.","Начислено","Налог 3%",
-                "Оплачено","Субсидии","Дебет кон.","Кредит кон."};
+                "Оплачено","Субсидии","Пеня","Дебет кон.","Кредит кон."};
         for (String h : headers) table.addCell(makeChargeHeader(h));
         table.setHeaderRows(1);
 
@@ -266,6 +267,7 @@ public void generatePrivateReport(
             table.addCell(makeChargeData(toStr(row.getTaxIn())));
             table.addCell(makeChargeData(toStr(row.getPaydIn())));
             table.addCell(makeChargeData(toStr(row.getSubsidy())));
+            table.addCell(makeChargeData(toStr(row.getLateFee())));
             table.addCell(makeChargeData(toStr(row.getDebetOut())));
             table.addCell(makeChargeData(toStr(row.getCredetOut())));
 
@@ -372,15 +374,15 @@ public void generateAllHousesReport(
     document.open();
 
     // === таблица ===
-    PdfPTable table = new PdfPTable(9);
+    PdfPTable table = new PdfPTable(10);
     table.setWidthPercentage(100);
-    table.setWidths(new float[]{15f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f});
+    table.setWidths(new float[]{14f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f});
 
     // Заголовки
     String[] headers = {
             "Наименование дома",
             "Дебет нач.","Кредит нач.","Начислено","Налог 3%",
-            "Оплачено","Субсидии","Дебет кон.","Кредит кон."
+            "Оплачено","Субсидии","Пеня","Дебет кон.","Кредит кон."
     };
     for (String h : headers)
         table.addCell(makeChargeHeader(h));
@@ -404,6 +406,7 @@ public void generateAllHousesReport(
     BigDecimal sumSubsidy = BigDecimal.ZERO;
     BigDecimal sumDebetOut = BigDecimal.ZERO;
     BigDecimal sumCredetOut = BigDecimal.ZERO;
+    BigDecimal sumLateFee = BigDecimal.ZERO;
 
     // === Цикл по строкам ===
     for (HouseAllReportDTO row : rows) {
@@ -414,6 +417,7 @@ public void generateAllHousesReport(
         table.addCell(makeChargeData(toStr(row.getTaxIn())));
         table.addCell(makeChargeData(toStr(row.getPaydIn())));
         table.addCell(makeChargeData(toStr(row.getSubsidy())));
+        table.addCell(makeChargeData(toStr(row.getLateFeeOut())));
         table.addCell(makeChargeData(toStr(row.getDebetOut())));
         table.addCell(makeChargeData(toStr(row.getCredetOut())));
 
@@ -425,6 +429,7 @@ public void generateAllHousesReport(
         sumTaxIn = sumTaxIn.add(nvl(row.getTaxIn()));
         sumPaid = sumPaid.add(nvl(row.getPaydIn()));
         sumSubsidy = sumSubsidy.add(nvl(row.getSubsidy()));
+        sumLateFee = sumLateFee.add(nvl(row.getLateFeeOut()));
         sumDebetOut = sumDebetOut.add(nvl(row.getDebetOut()));
         sumCredetOut = sumCredetOut.add(nvl(row.getCredetOut()));
     }
@@ -438,6 +443,7 @@ public void generateAllHousesReport(
     table.addCell(makeTotalCell2(toStr2(sumTaxIn)));
     table.addCell(makeTotalCell2(toStr(sumPaid)));
     table.addCell(makeTotalCell2(toStr(sumSubsidy)));
+    table.addCell(makeTotalCell2(toStr(sumLateFee)));
     table.addCell(makeTotalCell2(toStr(sumDebetOut)));
     table.addCell(makeTotalCell2(toStr(sumCredetOut)));
 
@@ -465,15 +471,15 @@ public void generateAllStreetsReport(
     document.open();
 
     // === таблица ===
-    PdfPTable table = new PdfPTable(9);
+    PdfPTable table = new PdfPTable(10);
     table.setWidthPercentage(100);
-    table.setWidths(new float[]{15f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f});
+    table.setWidths(new float[]{12f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f, 5f});
 
     // Заголовки
     String[] headers = {
             "Наименование улицы",
             "Дебет нач.","Кредит нач.","Начислено","Налог 3%",
-            "Оплачено","Субсидии","Дебет кон.","Кредит кон."
+            "Оплачено","Субсидии","Пеня","Дебет кон.","Кредит кон."
     };
     for (String h : headers)
         table.addCell(makeChargeHeader(h));
@@ -495,6 +501,7 @@ public void generateAllStreetsReport(
     BigDecimal sumTaxIn = BigDecimal.ZERO;
     BigDecimal sumPaid = BigDecimal.ZERO;
     BigDecimal sumSubsidy = BigDecimal.ZERO;
+    BigDecimal sumLateFee = BigDecimal.ZERO;
     BigDecimal sumDebetOut = BigDecimal.ZERO;
     BigDecimal sumCredetOut = BigDecimal.ZERO;
 
@@ -507,6 +514,7 @@ public void generateAllStreetsReport(
         table.addCell(makeChargeData(toStr(row.getTaxIn())));
         table.addCell(makeChargeData(toStr(row.getPaydIn())));
         table.addCell(makeChargeData(toStr(row.getSubsidy())));
+        table.addCell(makeChargeData(toStr(row.getLateFee())));
         table.addCell(makeChargeData(toStr(row.getDebetOut())));
         table.addCell(makeChargeData(toStr(row.getCredetOut())));
 
@@ -517,6 +525,7 @@ public void generateAllStreetsReport(
         sumTaxIn = sumTaxIn.add(nvl(row.getTaxIn()));
         sumPaid = sumPaid.add(nvl(row.getPaydIn()));
         sumSubsidy = sumSubsidy.add(nvl(row.getSubsidy()));
+        sumLateFee = sumLateFee.add(nvl(row.getLateFee()));
         sumDebetOut = sumDebetOut.add(nvl(row.getDebetOut()));
         sumCredetOut = sumCredetOut.add(nvl(row.getCredetOut()));
     }
@@ -530,6 +539,7 @@ public void generateAllStreetsReport(
     table.addCell(makeTotalCell2(toStr2(sumTaxIn)));
     table.addCell(makeTotalCell2(toStr(sumPaid)));
     table.addCell(makeTotalCell2(toStr(sumSubsidy)));
+    table.addCell(makeTotalCell2(toStr(sumLateFee)));
     table.addCell(makeTotalCell2(toStr(sumDebetOut)));
     table.addCell(makeTotalCell2(toStr(sumCredetOut)));
 

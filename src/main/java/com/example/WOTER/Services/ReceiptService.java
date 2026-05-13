@@ -48,6 +48,7 @@ public class ReceiptService {
             dto.setTaxPrcent((String) r[27]);
             dto.setRownum(r[28] != null ? ((Number) r[28]).intValue() : null);
             dto.setTarif(r[29] != null ? ((Number) r[29]).doubleValue() : null);
+            dto.setLateFee(r[30] != null ? ((Number) r[30]).doubleValue() : 0);
             return dto;
         }).collect(Collectors.toList());
     }
@@ -90,7 +91,7 @@ public class ReceiptService {
             dto.setIndicationCurr(r[32] != null ? r[32].toString() : null);
             dto.setM3(toInt(r[33])); // расход
             dto.setSumIndication(toDouble(r[34])); // сумма по показаниям
-
+            dto.setLateFee(r[35] != null ? ((Number) r[35]).doubleValue() : 0);
             return dto;
         }).collect(Collectors.toList());
     }

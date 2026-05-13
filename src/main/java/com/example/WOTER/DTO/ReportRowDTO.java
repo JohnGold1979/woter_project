@@ -20,12 +20,14 @@ public class ReportRowDTO {
     private BigDecimal credetOut;
     private BigDecimal subsidy;
 
+    private BigDecimal lateFee;
+
 
     // Конструктор для агрегированных отчётов
     public ReportRowDTO(String flat, String persAccount,String clientName,String address, BigDecimal debetIn, BigDecimal credetIn, BigDecimal chargedMoney,
                         BigDecimal taxIn, BigDecimal paydIn, BigDecimal taxOut,
                         BigDecimal removalIn, BigDecimal remTaxIn, BigDecimal debetOut,
-                        BigDecimal credetOut, BigDecimal subsidy) {
+                        BigDecimal credetOut, BigDecimal subsidy, BigDecimal lateFee) {
         this.flat = flat;
         this.persAccount = persAccount;
         this.clientName = clientName;
@@ -41,6 +43,7 @@ public class ReportRowDTO {
         this.debetOut = debetOut;
         this.credetOut = credetOut;
         this.subsidy = subsidy;
+        this.lateFee = lateFee;
 
     }
 
@@ -89,8 +92,6 @@ public class ReportRowDTO {
     public BigDecimal getSubsidy() { return subsidy; }
     public void setSubsidy(BigDecimal subsidy) { this.subsidy = subsidy; }
 
-
-
-
-
+    public BigDecimal getLateFee() { return lateFee; }
+    public void setLateFee(BigDecimal lateFee) { this.subsidy = lateFee; }
 }

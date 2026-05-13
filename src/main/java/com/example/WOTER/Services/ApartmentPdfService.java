@@ -21,7 +21,7 @@ public class ApartmentPdfService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         // A4, альбомная ориентация
-        Document document = new Document(PageSize.A4.rotate(), 10, 10, 10, 10);
+        Document document = new Document(PageSize.A4.rotate(), 3, 3, 3, 3);
         PdfWriter.getInstance(document, baos);
         document.open();
 
@@ -127,7 +127,7 @@ public class ApartmentPdfService {
                 """
                         Оплата производится только терминалах Раy24!
                         Телефон для справок: 92-65-33, 92-73-33, 92-61-08
-                        В случае неуплаты до 25 числа текущего месяца, подача холодной воды будет прекращена.""",
+                        В случае неуплаты до 16 числа текущего месяца, вам будет начисляться пеня!""",
                 1, Element.ALIGN_LEFT, false));
 
         PdfPCell bodyCell = new PdfPCell(kvit);
@@ -139,7 +139,7 @@ public class ApartmentPdfService {
 
     // Таблица начислений
     private PdfPTable buildCharges(ReceiptDTO dto) {
-        PdfPTable charges = new PdfPTable(new float[]{2, 2, 2, 2, 2, 2, 2, 2});
+        PdfPTable charges = new PdfPTable(new float[]{2, 2, 2, 2, 2, 2, 2, 2, 2});
         charges.setWidthPercentage(100);
 
         charges.addCell(makeChargeHeader("Ай башындагы карыз Долг нач. мес"));
@@ -149,6 +149,7 @@ public class ApartmentPdfService {
         charges.addCell(makeChargeHeader("Субсидия"));
         charges.addCell(makeChargeHeader("Налог " + dto.getTaxPrcent()));
         charges.addCell(makeChargeHeader("Ай аягындагы Долг на конец мес"));
+        charges.addCell(makeChargeHeader("Пеня"));
         charges.addCell(makeChargeHeader("Итого к оплате"));
 
         charges.addCell(makeChargeData(String.valueOf(dto.getDebetIn())));
@@ -158,8 +159,8 @@ public class ApartmentPdfService {
         charges.addCell(makeChargeData(String.valueOf(dto.getSubsidyIn())));
         charges.addCell(makeChargeData(String.valueOf(dto.getSummaTax())));
         charges.addCell(makeChargeData(String.valueOf(dto.getDebetOut())));
+        charges.addCell(makeChargeData(String.valueOf(dto.getLateFee())));
         charges.addCell(makeChargeData(String.valueOf(dto.getSumma())));
-
         return charges;
     }
 
@@ -183,7 +184,7 @@ public class ApartmentPdfService {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setColspan(colspan);
         cell.setHorizontalAlignment(align);
-        cell.setPadding(4);
+        cell.setPadding(3);
         return cell;
     }
 }

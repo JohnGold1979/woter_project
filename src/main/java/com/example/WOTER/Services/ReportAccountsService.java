@@ -32,7 +32,8 @@ public class ReportAccountsService {
            ws.credet_out as credetOut,
            ws.subsidy as subsidy,
            ws.removal_in as removalIn,
-           ws.rem_tax_in as remTaxIn
+           ws.rem_tax_in as remTaxIn,
+           ws.late_fee_out
             from wot_saldo ws, wot_clients wc, wot_address wa
             where ws.client_id =  wc.id
             and  ws.client_id  =  wa.client_id
@@ -57,11 +58,12 @@ public class ReportAccountsService {
                         rs.getBigDecimal("taxIn"),
                         rs.getBigDecimal("paydIn"),
                         rs.getBigDecimal("taxOut"),
-                        rs.getBigDecimal("removalIn"),  // ✅ на своём месте
-                        rs.getBigDecimal("remTaxIn"),   // ✅ на своём месте
-                        rs.getBigDecimal("debetOut"),   // ✅ на своём месте
-                        rs.getBigDecimal("credetOut"),  // ✅ на своём месте
-                        rs.getBigDecimal("subsidy")     // ✅ теперь в конце
+                        rs.getBigDecimal("removalIn"),
+                        rs.getBigDecimal("remTaxIn"),
+                        rs.getBigDecimal("debetOut"),
+                        rs.getBigDecimal("credetOut"),
+                        rs.getBigDecimal("subsidy"),
+                        rs.getBigDecimal("late_fee_out")
                 )
         );
     }
@@ -82,7 +84,8 @@ public class ReportAccountsService {
             ws.credet_out as credetOut,
             ws.subsidy as subsidy,
             ws.removal_in as removalIn,
-            ws.rem_tax_in as remTaxIn
+            ws.rem_tax_in as remTaxIn,
+            ws.late_fee_out
             from wot_saldo ws, wot_clients wc, wot_address wa
             where ws.client_id =  wc.id
               and  ws.client_id  =  wa.client_id
@@ -107,11 +110,12 @@ public class ReportAccountsService {
                         rs.getBigDecimal("taxIn"),
                         rs.getBigDecimal("paydIn"),
                         rs.getBigDecimal("taxOut"),
-                        rs.getBigDecimal("removalIn"),  // ✅ на своём месте
-                        rs.getBigDecimal("remTaxIn"),   // ✅ на своём месте
-                        rs.getBigDecimal("debetOut"),   // ✅ на своём месте
-                        rs.getBigDecimal("credetOut"),  // ✅ на своём месте
-                        rs.getBigDecimal("subsidy")     // ✅ теперь в конце
+                        rs.getBigDecimal("removalIn"),
+                        rs.getBigDecimal("remTaxIn"),
+                        rs.getBigDecimal("debetOut"),
+                        rs.getBigDecimal("credetOut"),
+                        rs.getBigDecimal("subsidy"),
+                        rs.getBigDecimal("late_fee_out")
                 )
         );
     }
@@ -136,7 +140,8 @@ public class ReportAccountsService {
                    sum(ws.rem_tax_in) as remTaxIn,
                    sum(ws.debet_out) as debetOut,
                    sum(ws.credet_out) as credetOut,
-                   sum(ws.subsidy)   as subsidy
+                   sum(ws.subsidy)   as subsidy,
+                   sum(ws.late_fee_out) as late_fee_out
             from wot_clients wc
             join wot_saldo ws on ws.client_id = wc.id
             join wot_address wa on ws.client_id = wa.client_id
@@ -163,7 +168,9 @@ public class ReportAccountsService {
                         rs.getBigDecimal("remTaxIn"),
                         rs.getBigDecimal("debetOut"),
                         rs.getBigDecimal("credetOut"),
-                        rs.getBigDecimal("subsidy")
+                        rs.getBigDecimal("subsidy"),
+                        rs.getBigDecimal("late_fee_out")
+
                 )
         );
     }
@@ -185,7 +192,8 @@ public List<StreetAllReportDTO> getStreetsAllReport(int montId, int yearId){
                                       sum(ws.rem_tax_in) as remTaxIn,
                                       sum(ws.debet_out) as debetOut,
                                       sum(ws.credet_out) as credetOut,
-                                      sum(ws.subsidy)   as subsidy
+                                      sum(ws.subsidy)   as subsidy,
+                                      sum(ws.late_fee_out) as late_fee_out
                                from wot_clients wc
                                join wot_saldo ws on ws.client_id = wc.id
                                join wot_address wa on ws.client_id = wa.client_id
@@ -212,7 +220,8 @@ public List<StreetAllReportDTO> getStreetsAllReport(int montId, int yearId){
                     rs.getBigDecimal("remTaxIn"),
                     rs.getBigDecimal("debetOut"),
                     rs.getBigDecimal("credetOut"),
-                    rs.getBigDecimal("subsidy")
+                    rs.getBigDecimal("subsidy"),
+                    rs.getBigDecimal("late_fee_out")
             )
     );
 }

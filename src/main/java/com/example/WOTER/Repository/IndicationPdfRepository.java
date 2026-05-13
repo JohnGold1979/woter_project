@@ -122,7 +122,8 @@ public interface IndicationPdfRepository extends JpaRepository<SaldoEntity, Long
                              order by to_date('01.'||month_id||'.'||year_id,'dd.mm.yyyy') desc
                              limit 2
                          ) t
-                       ) as summa_curr
+                       ) as summa_curr,
+                     ws.late_fee_out
               from wot_clients wc
               left join wot_saldo ws on ws.client_id = wc.id
               left join wot_address wa on wa.client_id = wc.id

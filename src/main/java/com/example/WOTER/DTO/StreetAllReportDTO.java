@@ -15,6 +15,7 @@ public class StreetAllReportDTO {
     private BigDecimal debetOut;
     private BigDecimal credetOut;
     private BigDecimal subsidy;
+    private BigDecimal lateFee;
 
     public StreetAllReportDTO(String streetName,
                              BigDecimal debetIn,
@@ -27,7 +28,8 @@ public class StreetAllReportDTO {
                              BigDecimal remTaxIn,
                              BigDecimal debetOut,
                              BigDecimal credetOut,
-                             BigDecimal subsidy) {
+                             BigDecimal subsidy,
+                             BigDecimal lateFee) {
         this.streetName = streetName;
         this.debetIn = debetIn;
         this.credetIn = credetIn;
@@ -40,6 +42,7 @@ public class StreetAllReportDTO {
         this.debetOut = debetOut;
         this.credetOut = credetOut;
         this.subsidy = subsidy;
+        this.lateFee = lateFee;
     }
 
     public String getStreetName() { return streetName; }
@@ -54,4 +57,6 @@ public class StreetAllReportDTO {
     public BigDecimal getDebetOut() { return debetOut; }
     public BigDecimal getCredetOut() { return credetOut; }
     public BigDecimal getSubsidy() { return subsidy; }
+
+    public BigDecimal getLateFee() { return lateFee; }
 }

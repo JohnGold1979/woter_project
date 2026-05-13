@@ -28,7 +28,8 @@ public interface ApartmentRepository  extends JpaRepository<SaldoEntity, Long>{
                               where wt.tarif_status_id = 1
                                 and wt.tarif_date >= to_date('2025-09-15','yyyy-mm-dd')
                                  and wt.tarif_type_id = wc.client_type_id
-                                 and wt.system_id = 1)as tarif
+                                 and wt.system_id = 1)as tarif,
+                             ws.late_fee_out
                        from wot_clients wc
                        left join wot_saldo ws on ws.client_id = wc.id
                        left join wot_address wa on wa.client_id = wc.id

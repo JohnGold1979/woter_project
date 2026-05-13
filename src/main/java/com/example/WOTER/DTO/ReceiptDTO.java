@@ -36,6 +36,8 @@ public class ReceiptDTO {
     private Integer m3;
     private Double sumIndication;
 
+    private Double lateFee;
+
 
     // Пустой конструктор (обязателен для Spring/JPA)
     public ReceiptDTO() {}
@@ -50,7 +52,7 @@ public class ReceiptDTO {
                       Integer persFactOut, Integer persResultOut, Double summaTax, Double tax,
                       String taxPrcent, Integer rownum, Double tarif, String address,
                       String monthPrev, String monthCurr, String indicationPrev, String indicationCurr,
-                      Integer m3, Double sumIndication) {
+                      Integer m3, Double sumIndication, Double lateFee) {
         this.id = id;
         this.flat = flat;
         this.persAccount = persAccount;
@@ -85,6 +87,7 @@ public class ReceiptDTO {
         this.indicationCurr = indicationCurr;
         this.m3 = m3;
         this.sumIndication = sumIndication;
+        this.lateFee = lateFee;
     }
 
     // --- Геттеры и сеттеры ---
@@ -189,5 +192,7 @@ public class ReceiptDTO {
 
     public Double getSumIndication() { return sumIndication; }
     public void setSumIndication(Double sumIndication) { this.sumIndication = sumIndication; }
+    public Double getLateFee() { return lateFee; }
+    public void setLateFee(Double lateFee) { this.lateFee = lateFee; }
 
 }

@@ -48,6 +48,7 @@ public class ApartmentService {
                 dto.setTaxPrcent((String) r[27]);
                 dto.setRownum(r[28] != null ? ((Number) r[28]).intValue() : null);
                 dto.setTarif(r[29] != null ? ((Number) r[29]).doubleValue() : null);
+                dto.setLateFee(r[30] != null ? ((Number) r[30]).doubleValue() : 0);
                 return dto;
             }).collect(Collectors.toList());
         }

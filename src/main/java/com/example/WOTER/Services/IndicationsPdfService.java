@@ -129,10 +129,10 @@ public class IndicationsPdfService {
         kvitTable.addCell(chargesCell2);
 
         kvitTable.addCell(makeCell(
-                """
+                """ 
                         Оплата производится только в терминалах Pay24.
                         Телефон для справок: 92-65-33, 92-73-33, 92-61-08
-                        В случае неуплаты до 25 числа текущего месяца, подача холодной воды будет прекращена.
+                        В случае неуплаты до 16 числа текущего месяца, вам будет начисляться пеня!
                         ВНИМАНИЕ! Показания принимаются по тел 92-70-64, 92-70-64""",
                 1, Element.ALIGN_LEFT, false));
 
@@ -145,7 +145,7 @@ public class IndicationsPdfService {
 
     // === Таблица начислений ===
     private PdfPTable buildCharges(ReceiptDTO dto) {
-        PdfPTable charges = new PdfPTable(new float[]{2, 2, 2, 2, 2, 2, 2, 2});
+        PdfPTable charges = new PdfPTable(new float[]{2, 2, 2, 2, 2, 2, 2, 2, 2});
         charges.setWidthPercentage(100);
 
         charges.addCell(makeChargeHeader("Ай башындагы карыз\nДолг нач. мес"));
@@ -155,6 +155,7 @@ public class IndicationsPdfService {
         charges.addCell(makeChargeHeader("Субсидия"));
         charges.addCell(makeChargeHeader("Налог " + dto.getTaxPrcent()));
         charges.addCell(makeChargeHeader("Ай аягындагы карыз\nДолг на конец мес"));
+        charges.addCell(makeChargeHeader("Пеня"));
         charges.addCell(makeChargeHeader("Итого к оплате"));
 
         charges.addCell(makeChargeData(String.valueOf(dto.getDebetIn())));
@@ -164,6 +165,7 @@ public class IndicationsPdfService {
         charges.addCell(makeChargeData(String.valueOf(dto.getSubsidyIn())));
         charges.addCell(makeChargeData(String.valueOf(dto.getSummaTax())));
         charges.addCell(makeChargeData(String.valueOf(dto.getDebetOut())));
+        charges.addCell(makeChargeData(String.valueOf(dto.getLateFee())));
         charges.addCell(makeChargeData(String.valueOf(dto.getSumma())));
 
         return charges;
