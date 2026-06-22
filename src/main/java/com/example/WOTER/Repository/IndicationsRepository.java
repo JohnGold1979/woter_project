@@ -58,6 +58,15 @@ public class IndicationsRepository {
         return dto;
     }
 
+    // Добавьте этот метод в IndicationsRepository
+    public String insertIndWithParams(String personalAccount, int monthId, int yearId, int m3) {
+        String sql = "SELECT ins_indications(?, ?, ?, ?);";
+        return jdbcTemplate.queryForObject(
+                sql,
+                new Object[]{personalAccount, monthId, yearId, m3},
+                String.class
+        );
+    }
 
     public List<HouseAllReportDTO.IndicationsDTO> findByAccountAndYear(String persAccount, int year) {
         String sql = """

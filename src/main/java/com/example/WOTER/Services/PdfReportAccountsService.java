@@ -41,7 +41,6 @@ public class PdfReportAccountsService {
                 period
         ));
         document.open();
-
         Font titleFont = new Font(Font.HELVETICA, 14, Font.BOLD);
 
         // === Общие суммы по всем домам ===
@@ -53,6 +52,9 @@ public class PdfReportAccountsService {
         BigDecimal totalRemovalAll = BigDecimal.ZERO;
         BigDecimal totalDebetOutAll = BigDecimal.ZERO;
         BigDecimal totalCredetOutAll = BigDecimal.ZERO;
+        BigDecimal totalLateFee = BigDecimal.ZERO;
+
+
 
         for (HouseDTO house : houses) {
             int houseId = house.getHouseId();
@@ -90,6 +92,7 @@ public class PdfReportAccountsService {
             BigDecimal sumRemoval = BigDecimal.ZERO;
             BigDecimal sumDebetOut = BigDecimal.ZERO;
             BigDecimal sumCredetOut = BigDecimal.ZERO;
+            BigDecimal sumLateFee = BigDecimal.ZERO;
 
             for (ReportRowDTO row : rows) {
                 table.addCell(makeChargeDataInfo(String.valueOf(row.getFlat())));
@@ -115,6 +118,7 @@ public class PdfReportAccountsService {
                 sumRemoval = sumRemoval.add(nvl(row.getSubsidy()));
                 sumDebetOut = sumDebetOut.add(nvl(row.getDebetOut()));
                 sumCredetOut = sumCredetOut.add(nvl(row.getCredetOut()));
+
             }
 
             // === Итог по дому ===
@@ -145,6 +149,7 @@ public class PdfReportAccountsService {
             totalRemovalAll = totalRemovalAll.add(sumRemoval);
             totalDebetOutAll = totalDebetOutAll.add(sumDebetOut);
             totalCredetOutAll = totalCredetOutAll.add(sumCredetOut);
+
         }
 
         // === Итоговая страница по всем домам ===
