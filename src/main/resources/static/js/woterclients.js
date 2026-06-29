@@ -144,7 +144,7 @@ let isLoaded = false;
         }
    });
 
-    document.querySelector("table").addEventListener("click", function (event) {
+document.querySelector("table").addEventListener("click", function (event) {
            // Проверяем, куда кликнули
            if (event.target.classList.contains("pay-outline-btn")) {
                // Найдём строку (родительский <tr>)
@@ -168,6 +168,69 @@ let isLoaded = false;
                addEditClientOutline(account);
            }
        });
+
+       // Обработчик формы добавления/редактирования клиента
+       const addClientForm = document.getElementById("addClientForm");
+       if (addClientForm) {
+       addClientForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const persAcc = document.getElementById("persAccEditAdd").value.trim();
+    const clientName = document.getElementById("clNameEditAdd").value.trim();
+    const streetId = document.getElementById("selectStreet").value;
+    const house = document.getElementById("house").value.trim();
+    const flat = document.getElementById("flat").value.trim();
+    const cntPersons = document.getElementById("cP").value;
+    const cntPersonsFact = document.getElementById("cPF").value;
+    const clientType = document.querySelector('input[name="clientType"]:checked').value;
+    const counterIn = document.querySelector('input[name="counterIn"]:checked').value;
+
+    if (!persAcc || !clientName || !streetId || !house || !flat) {
+        alert("Заполните обязательные поля: Лицевой счёт, ФИО, Улица, Дом, Квартира");
+        return;
+    }
+
+    const clientData = {
+        personalAccount: persAcc,
+        clientName: clientName,
+        streetId: parseInt(streetId),
+        house: house,
+        flat: flat,
+        cntPersons: cntPersons ? parseInt(cntPersons) : null,
+        cntPersonsFact: cntPersonsFact ? parseInt(cntPersonsFact) : null,
+        clientType: parseInt(clientType),
+        counterIn: parseInt(counterIn)
+    };
+
+    try {
+        // Проверяем, редактируем или добавляем
+        const editMode = this.dataset.editMode === "true";
+        const url = editMode ? "/clients/update" : "/clients/save";
+        
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(clientData)
+        });
+
+        const result = await response.text();
+        
+        if (response.ok) {
+            alert(editMode ? "Клиент обновлён!" : "Клиент добавлен!");
+            bootstrap.Modal.getInstance(document.getElementById('AddEditClient')).hide();
+            addClientForm.reset();
+            addClientForm.dataset.editMode = "false";
+            // Перезагружаем страницу для обновления списка
+            setTimeout(() => location.reload(), 500);
+        } else {
+            alert("Ошибка: " + result);
+        }
+    } catch (err) {
+        console.error("Ошибка:", err);
+        alert("Не удалось сохранить клиента");
+    }
+});
+}
 
 
        toggle.addEventListener("click", async (e) => {
@@ -258,43 +321,59 @@ function addEditClientOutline(account) {
       modal.show();
       let persAcc = account;
 
-              // Делаем запрос в Spring API
-              fetch(`/clients/${persAcc}`)
-              .then(response => {
-                  if (!response.ok) {
-                      throw new Error("Клиент не найден");
-                  }
-                 return response.json();
-              })
-              .then(data => {
-                 document.getElementById("persAccEditAdd").value = data.personalAccount || "";
-                 document.getElementById("clNameEditAdd").value = data.clientName || "";
-               })
-               .catch(err => console.error("Ошибка загрузки данных клиента:", err));
+      // Делаем оба запроса параллельно
+      Promise.all([
+          fetch(`/clients/${persAcc}`),
+          fetch('/clients/streets/findByPersAcc?persAcc=' + persAcc)
+      ])
+      .then(([clientRes, streetsRes]) => {
+          if (!clientRes.ok) {
+              throw new Error("Клиент не найден");
+          }
+          return Promise.all([clientRes.json(), streetsRes.json()]);
+      })
+      .then(([clientData, streets]) => {
+          console.log("Данные клиента:", clientData);
+          console.log("Список улиц:", streets);
 
+          // Заполняем основные поля
+          document.getElementById("persAccEditAdd").value = clientData.personalAccount || "";
+          document.getElementById("clNameEditAdd").value = clientData.clientName || "";
+          document.getElementById("house").value = clientData.house || "";
+          document.getElementById("flat").value = clientData.flat || "";
+          document.getElementById("cP").value = clientData.cntPers ?? "";
+          document.getElementById("cPF").value = clientData.cntPersFact ?? "";
 
-               fetch('/clients/streets/findByPersAcc?persAcc=' + persAcc)
-                     .then(r => r.json())
-                        .then(data => {
-                         console.log("Получен список улиц:", data);
+          // Устанавливаем тип клиента
+          const clientTypeRadio = document.querySelector(`input[name="clientType"][value="${clientData.clientType || 1}"]`);
+          if (clientTypeRadio) clientTypeRadio.checked = true;
 
-                            if (Array.isArray(data) && data.length > 0) {
-                                // Берём первую улицу (или другую логику)
-                                const s = data[0];
+          // Устанавливаем наличие водомера
+          const counterRadio = document.querySelector(`input[name="counterIn"][value="${clientData.counterInId || 0}"]`);
+          if (counterRadio) counterRadio.checked = true;
 
-                                // Если select ещё не заполнен — заполняем
-                                const select = $('#selectStreet');
-                                select.empty().append('<option value="">Выберите улицу</option>');
+          // Устанавливаем режим редактирования
+          document.getElementById("addClientForm").dataset.editMode = "true";
 
-                                data.forEach(street =>
-                                    select.append(new Option(street.streetName, street.streetId))
-                                );
+          // Заполняем список улиц и выбираем нужную
+          if (Array.isArray(streets) && streets.length > 0) {
+              const select = $('#selectStreet');
+              select.empty().append('<option value="">Выберите улицу</option>');
 
-                                // Выставляем выбранную улицу
-                                select.val(s.streetId).change();
-                            }
-                       })
-                       .catch(err => console.error("Ошибка поиска клиента по ЛС:", err));
+              streets.forEach(street =>
+                  select.append(new Option(street.streetName, street.streetId))
+              );
+
+              // Выбираем улицу клиента
+              if (clientData.streetId) {
+                  select.val(clientData.streetId);
+              }
+          }
+      })
+      .catch(err => {
+          console.error("Ошибка загрузки данных:", err);
+          document.getElementById("addClientForm").dataset.editMode = "false";
+      });
 }
 //***********************************************************************************************************************
 function submitPayment() {

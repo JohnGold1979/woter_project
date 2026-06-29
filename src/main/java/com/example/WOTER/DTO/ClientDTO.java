@@ -10,6 +10,10 @@ public class ClientDTO {
     private String Address;
     private Integer ClientType;
     private Integer CounterInId;
+    private Integer StreetId;
+    private String House;
+    private Integer CntPers;
+    private Integer CntPersFact;
 
     public Long getId() {
         return id;
@@ -54,5 +58,17 @@ public class ClientDTO {
 
     public Integer getCounterInId() { return CounterInId; }
     public void setCounterInId(Integer CounterInId) { this.CounterInId = CounterInId; }
+
+    public Integer getStreetId() { return StreetId; }
+    public void setStreetId(Integer StreetId) { this.StreetId = StreetId; }
+
+    public String getHouse() { return House; }
+    public void setHouse(String House) { this.House = House; }
+
+    public Integer getCntPers() { return CntPers; }
+    public void setCntPers(Integer CntPers) { this.CntPers = CntPers; }
+
+    public Integer getCntPersFact() { return CntPersFact; }
+    public void setCntPersFact(Integer CntPersFact) { this.CntPersFact = CntPersFact; }
 
 }

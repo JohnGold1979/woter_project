@@ -98,15 +98,33 @@ public class ClientRepository {
     public ClientDTO findByPersAcc(String account) {
         String sql = """
             select wc.id::bigint,
-                   wa.flat,
+                   CASE
+                     WHEN wa.street_id IS NULL THEN wa.flat
+                     ELSE wa.flat
+                   end as flat,
                    wc.pers_account,
                    wc.client_name,
                    (wc.cnt_pers + wc.cnt_pers_fact) as cnt_pers_result,
-                   s2.street_name || ' ' || h.house || ' кв. ' || wa.flat as address,
-                   wc.client_type_id
+                   CASE
+                     WHEN wa.street_id IS NULL THEN s2.street_name || ' ' || h.house || ' кв. ' || wa.flat
+                     ELSE s.street_name || ' д. ' || wa.flat
+                   END AS address,
+                   wc.client_type_id,
+                   wc.counter_in_id,
+                   CASE
+                     WHEN wa.street_id IS NULL THEN h.street_id
+                     ELSE wa.street_id
+                   END as street_id,
+                   CASE
+                     WHEN wa.street_id IS NULL THEN h.house
+                     ELSE ''
+                   END as house,
+                   wc.cnt_pers,
+                   wc.cnt_pers_fact
             from wot_clients wc
             left join wot_address wa on wa.client_id = wc.id
             left join wot_houses h on h.id = wa.house_id
+            left join wot_streets s on s.id = wa.street_id
             left join wot_streets s2 on s2.id = h.street_id
             where wc.pers_account = ?
             """;
@@ -120,6 +138,11 @@ public class ClientRepository {
             dto.setCntPersResult(rs.getInt("cnt_pers_result"));
             dto.setAddress(rs.getString("address"));
             dto.setClientType(rs.getInt("client_type_id"));
+            dto.setCounterInId(rs.getInt("counter_in_id"));
+            dto.setStreetId(rs.getInt("street_id"));
+            dto.setHouse(rs.getString("house"));
+            dto.setCntPers(rs.getInt("cnt_pers"));
+            dto.setCntPersFact(rs.getInt("cnt_pers_fact"));
             return dto;
         });
     }
@@ -207,5 +230,134 @@ public class ClientRepository {
                 String.class
         );
 
+    }
+
+    public Long saveClient(java.util.Map<String, Object> data) {
+        String sql = """
+        INSERT INTO wot_clients (
+            pers_account, 
+            client_name, 
+            client_type_id, 
+            counter_in_id,
+            cnt_pers,
+            cnt_pers_fact,
+            create_date,
+            system_id,
+            status_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, 2, 1)
+        RETURNING id
+        """;
+
+        String persAcc = (String) data.get("personalAccount");
+        String clientName = (String) data.get("clientName");
+        Integer clientType = (Integer) data.get("clientType");
+        Integer counterIn = (Integer) data.get("counterIn");
+        Integer cntPersons = (Integer) data.get("cntPersons");
+        Integer cntPersonsFact = (Integer) data.get("cntPersonsFact");
+
+        return jdbcTemplate.queryForObject(
+                sql,
+                new Object[]{
+                    persAcc,
+                    clientName,
+                    clientType,
+                    counterIn,
+                    cntPersons != null ? cntPersons : 0,
+                    cntPersonsFact != null ? cntPersonsFact : 0
+                },
+                Long.class
+        );
+    }
+
+    public void saveClientAddress(Long clientId, java.util.Map<String, Object> data) {
+        Integer streetId = (Integer) data.get("streetId");
+        String house = (String) data.get("house");
+        String flat = (String) data.get("flat");
+
+        // Получаем station_id из улицы
+        Integer stationId = jdbcTemplate.queryForObject(
+                "SELECT station_id FROM wot_streets WHERE id = ?",
+                new Object[]{streetId},
+                Integer.class
+        );
+
+        String sql = """
+        INSERT INTO wot_address (
+            client_id,
+            street_id,
+            house_id,
+            flat,
+            station_id,
+            system_id,
+            status_id
+        )
+        VALUES (?, ?, NULL, ?, ?, 2, 1)
+        """;
+
+        jdbcTemplate.update(sql, clientId, streetId, flat, stationId);
+    }
+
+    public void updateClient(java.util.Map<String, Object> data) {
+        String persAcc = (String) data.get("personalAccount");
+        String clientName = (String) data.get("clientName");
+        Integer clientType = (Integer) data.get("clientType");
+        Integer counterIn = (Integer) data.get("counterIn");
+        Integer cntPersons = (Integer) data.get("cntPersons");
+        Integer cntPersonsFact = (Integer) data.get("cntPersonsFact");
+        Integer streetId = (Integer) data.get("streetId");
+        String house = (String) data.get("house");
+        String flat = (String) data.get("flat");
+
+        // Обновляем данные клиента
+        String sql = """
+        UPDATE wot_clients
+        SET client_name = ?,
+            client_type_id = ?,
+            counter_in_id = ?,
+            cnt_pers = COALESCE(?, cnt_pers),
+            cnt_pers_fact = COALESCE(?, cnt_pers_fact)
+        WHERE pers_account = ?
+        """;
+
+        jdbcTemplate.update(sql, clientName, clientType, counterIn,
+                cntPersons, cntPersonsFact, persAcc);
+
+        // Проверяем есть ли адрес
+        Integer addressCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM wot_address WHERE client_id = (SELECT id FROM wot_clients WHERE pers_account = ?)",
+                new Object[]{persAcc},
+                Integer.class
+        );
+
+        Integer stationId = jdbcTemplate.queryForObject(
+                "SELECT station_id FROM wot_streets WHERE id = ?",
+                new Object[]{streetId},
+                Integer.class
+        );
+
+        if (addressCount > 0) {
+            // Обновляем адрес
+            String updateAddress = """
+            UPDATE wot_address
+            SET street_id = ?,
+                flat = ?,
+                station_id = ?
+            WHERE client_id = (SELECT id FROM wot_clients WHERE pers_account = ?)
+            """;
+            jdbcTemplate.update(updateAddress, streetId, flat, stationId, persAcc);
+        } else {
+            // Создаём адрес
+            String insertAddress = """
+            INSERT INTO wot_address (
+                client_id, street_id, house_id, flat, station_id, system_id, status_id
+            )
+            VALUES (
+                (SELECT id FROM wot_clients WHERE pers_account = ?),
+                ?, NULL, ?, ?, 2, 1
+            )
+            """;
+            jdbcTemplate.update(insertAddress, persAcc, streetId, flat, stationId);
+        }
     }
 }

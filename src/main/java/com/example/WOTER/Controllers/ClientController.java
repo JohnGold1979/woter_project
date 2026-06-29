@@ -175,4 +175,33 @@ public class ClientController {
         }
     }
 
+    @PostMapping("/save")
+    public ResponseEntity<?> saveClient(@RequestBody Map<String, Object> clientData) {
+        try {
+            System.out.println("Сохраняем нового клиента: " + clientData);
+            Long clientId = clientRepository.saveClient(clientData);
+            clientRepository.saveClientAddress(clientId, clientData);
+            return ResponseEntity.ok("Клиент успешно добавлен! ID: " + clientId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(500)
+                    .body("Ошибка при добавлении клиента: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<?> updateClient(@RequestBody Map<String, Object> clientData) {
+        try {
+            System.out.println("Обновляем клиента: " + clientData);
+            clientRepository.updateClient(clientData);
+            return ResponseEntity.ok("Клиент успешно обновлён!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(500)
+                    .body("Ошибка при обновлении клиента: " + e.getMessage());
+        }
+    }
+
 }
