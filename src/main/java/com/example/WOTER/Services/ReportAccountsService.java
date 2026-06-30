@@ -253,17 +253,21 @@ public List<PayAllReportDTO> getPayAllReport(int montId, int yearId) {
 //----------------------------------------------------------------------------------------------------------------------
     public List<HouseDTO> getHouses() {
         String sql = """
-          select a.id as houseId, a.houseName
+          select a.id as houseId, a.house, a.streetId
                   from
-                  (SELECT wh.*, (SELECT STREET_NAME FROM WOT_STREETS WHERE wh.STREET_ID = ID) || ' '|| WH.HOUSE AS houseName
+                  (SELECT wh.id, wh.house, wh.street_id as streetId,
+                   (SELECT STREET_NAME FROM WOT_STREETS WHERE wh.STREET_ID = ID) || ' '|| WH.HOUSE AS houseName
                    FROM WOT_HOUSES wh order by wh.orders)a
         """;
 
-        return jdbcTemplate.query(sql, new Object[]{}, (rs, rowNum) ->
-                new HouseDTO(
-                        rs.getInt("houseId"), rs.getString("houseName")
-                )
-        );
+        return jdbcTemplate.query(sql, new Object[]{}, (rs, rowNum) -> {
+            HouseDTO dto = new HouseDTO();
+            dto.setHouseId(rs.getInt("houseId"));
+            dto.setHouse(rs.getString("house"));
+            dto.setStreetId(rs.getInt("streetId"));
+            dto.setHouseName(rs.getString("houseName"));
+            return dto;
+        });
     }
 
     public List<StreetDTO> getStreets() {

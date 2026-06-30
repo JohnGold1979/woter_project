@@ -17,7 +17,7 @@ public class StreetDTO {
         return streetId;
     }
 
-    public void seStreetId(int streetId) {
+    public void setStreetId(int streetId) {
         this.streetId = streetId;
     }
 

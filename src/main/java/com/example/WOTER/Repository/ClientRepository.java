@@ -360,4 +360,125 @@ public class ClientRepository {
             jdbcTemplate.update(insertAddress, persAcc, streetId, flat, stationId);
         }
     }
+
+    // ========== Справочник: Станции ==========
+    public java.util.List<StationDTO> getAllStations() {
+        String sql = "SELECT id as station_id, station_name FROM wot_stations ORDER BY station_name";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            StationDTO dto = new StationDTO();
+            dto.setStationId(rs.getLong("station_id"));
+            dto.setStationName(rs.getString("station_name"));
+            return dto;
+        });
+    }
+
+    public void saveStation(String stationName) {
+        String sql = "INSERT INTO wot_stations (station_name, system_id, status_id) VALUES (?, 2, 1)";
+        jdbcTemplate.update(sql, stationName);
+    }
+
+    public void updateStation(Long stationId, String stationName) {
+        String sql = "UPDATE wot_stations SET station_name = ? WHERE id = ?";
+        jdbcTemplate.update(sql, stationName, stationId);
+    }
+
+    public void deleteStation(Long stationId) {
+        String sql = "DELETE FROM wot_stations WHERE id = ?";
+        jdbcTemplate.update(sql, stationId);
+    }
+
+    // ========== Справочник: Улицы ==========
+    public java.util.List<StreetDTO> getAllStreetsAll() {
+        String sql = """
+            SELECT ws.id as street_id, ws.street_name, ws.station_id, s.station_name
+            FROM wot_streets ws
+            LEFT JOIN wot_stations s ON s.id = ws.station_id
+            ORDER BY ws.street_name
+        """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            StreetDTO dto = new StreetDTO();
+            dto.setStreetId(rs.getInt("street_id"));
+            dto.setStreetName(rs.getString("street_name"));
+            return dto;
+        });
+    }
+
+    public void saveStreet(String streetName, Integer stationId) {
+        String sql = "INSERT INTO wot_streets (street_name, station_id, system_id, status_id) VALUES (?, ?, 2, 1)";
+        jdbcTemplate.update(sql, streetName, stationId);
+    }
+
+    public void updateStreet(Integer streetId, String streetName, Integer stationId) {
+        String sql = "UPDATE wot_streets SET street_name = ?, station_id = ? WHERE id = ?";
+        jdbcTemplate.update(sql, streetName, stationId, streetId);
+    }
+
+    public void deleteStreet(Integer streetId) {
+        String sql = "DELETE FROM wot_streets WHERE id = ?";
+        jdbcTemplate.update(sql, streetId);
+    }
+
+    // ========== Справочник: Дома ==========
+    public java.util.List<HouseDTO> getAllHousesAll() {
+        String sql = """
+            SELECT h.id as house_id, h.house, h.street_id,
+                   s.street_name || ' ' || h.house as house_name, s.station_id
+            FROM wot_houses h
+            LEFT JOIN wot_streets s ON s.id = h.street_id
+            ORDER BY s.street_name, h.house
+        """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            HouseDTO dto = new HouseDTO();
+            dto.setHouseId(rs.getInt("house_id"));
+            dto.setHouse(rs.getString("house"));
+            dto.setStreetId(rs.getInt("street_id"));
+            dto.setStreetName(rs.getString("house_name"));
+            dto.setStationId(rs.getInt("station_id"));
+            dto.setHouseName(rs.getString("house_name"));
+            return dto;
+        });
+    }
+
+    public void saveHouse(String house, Integer streetId, Integer stationId) {
+        String sql = "INSERT INTO wot_houses (house, street_id, station_id, system_id, status_id) VALUES (?, ?, ?, 2, 1)";
+        jdbcTemplate.update(sql, house, streetId, stationId);
+    }
+
+    public void updateHouse(Integer houseId, String house, Integer streetId, Integer stationId) {
+        String sql = "UPDATE wot_houses SET house = ?, street_id = ?, station_id = ? WHERE id = ?";
+        jdbcTemplate.update(sql, house, streetId, stationId, houseId);
+    }
+
+    public void deleteHouse(Integer houseId) {
+        String sql = "DELETE FROM wot_houses WHERE id = ?";
+        jdbcTemplate.update(sql, houseId);
+    }
+
+    // ========== Справочник: Тарифы ==========
+    public java.util.List<TariffDTO> getAllTariffs() {
+        String sql = "SELECT id as tariff_id, tarif_name, tarif as tariff_rate, tarif_status_id as status_id FROM wot_tariffs ORDER BY tarif_name";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            TariffDTO dto = new TariffDTO();
+            dto.setTariffId(rs.getInt("tariff_id"));
+            dto.setTariffName(rs.getString("tarif_name"));
+            dto.setTariffRate(rs.getDouble("tariff_rate"));
+            dto.setStatusId(rs.getInt("status_id"));
+            return dto;
+        });
+    }
+
+    public void saveTariff(String tariffName, Double tariffRate, Integer statusId) {
+        String sql = "INSERT INTO wot_tariffs (tarif_name, tarif, tarif_status_id) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sql, tariffName, tariffRate, statusId);
+    }
+
+    public void updateTariff(Integer tariffId, String tariffName, Double tariffRate, Integer statusId) {
+        String sql = "UPDATE wot_tariffs SET tarif_name = ?, tarif = ?, tarif_status_id = ? WHERE id = ?";
+        jdbcTemplate.update(sql, tariffName, tariffRate, statusId, tariffId);
+    }
+
+    public void deleteTariff(Integer tariffId) {
+        String sql = "DELETE FROM wot_tariffs WHERE id = ?";
+        jdbcTemplate.update(sql, tariffId);
+    }
 }
