@@ -17,13 +17,15 @@ public class ReceiptController {
     private final ApartmentPdfService pdfServiceAppartment;
     private final ReceiptService receiptService;
     private final ApartmentService apartmentService;
+    private final com.example.WOTER.Repository.ClientRepository clientRepository;
 
-    public ReceiptController(ReceiptPdfService pdfService, IndicationsPdfService indPdfService, ApartmentPdfService pdfServiceAppartment, ReceiptService receiptService, ApartmentService apartmentService) {
+    public ReceiptController(ReceiptPdfService pdfService, IndicationsPdfService indPdfService, ApartmentPdfService pdfServiceAppartment, ReceiptService receiptService, ApartmentService apartmentService, com.example.WOTER.Repository.ClientRepository clientRepository) {
         this.pdfService = pdfService;
-        this.indPdfService = indPdfService;
         this.pdfServiceAppartment = pdfServiceAppartment;
+        this.indPdfService = indPdfService;
         this.receiptService = receiptService;
         this.apartmentService = apartmentService;
+        this.clientRepository = clientRepository;
     }
 
     @GetMapping("/print/apartment")
@@ -75,6 +77,46 @@ public class ReceiptController {
         List<ReceiptDTO> receipts = receiptService.getReceiptsInd(month, year);
 
         byte[] pdfBytes = indPdfService.indicationsPdf(receipts);
+
+        response.getOutputStream().write(pdfBytes);
+        response.getOutputStream().flush();
+    }
+
+    @GetMapping("/print/single")
+    public void printSingleReceipt(@RequestParam("persAcc") String persAcc,
+                                   @RequestParam("month") Integer month,
+                                   @RequestParam("year") Integer year,
+                                   HttpServletResponse response) throws Exception {
+        com.example.WOTER.DTO.ClientDTO client = clientRepository.findByPersAcc(persAcc);
+        if (client == null) {
+            response.sendError(404, "Клиент не найден");
+            return;
+        }
+
+        response.setContentType("application/pdf");
+        String filename = "receipt_" + persAcc + "_" + month + "_" + year + ".pdf";
+        response.setHeader("Content-Disposition", "inline; filename=" + filename);
+
+        byte[] pdfBytes;
+        if (client.getClientType() != null && client.getClientType() == 2) {
+            // Частный сектор
+            java.util.List<ReceiptDTO> list = receiptService.getReceipts(month, year).stream()
+                    .filter(r -> r.getPersonalAccount() != null && r.getPersonalAccount().equals(persAcc))
+                    .toList();
+            pdfBytes = pdfService.generatePdf(list);
+        } else if (client.getCounterInId() != null && client.getCounterInId() == 1) {
+            // Показания (водомер)
+            java.util.List<ReceiptDTO> list = receiptService.getReceiptsInd(month, year).stream()
+                    .filter(r -> r.getPersonalAccount() != null && r.getPersonalAccount().equals(persAcc))
+                    .toList();
+            pdfBytes = indPdfService.indicationsPdf(list);
+        } else {
+            // Квартирный сектор
+            java.util.List<ReceiptDTO> list = apartmentService.getReceiptsApartment(month, year).stream()
+                    .filter(r -> r.getPersonalAccount() != null && r.getPersonalAccount().equals(persAcc))
+                    .toList();
+            pdfBytes = pdfServiceAppartment.generatePdf(list);
+        }
 
         response.getOutputStream().write(pdfBytes);
         response.getOutputStream().flush();

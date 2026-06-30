@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>События - Водоканал</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="d-flex flex-column vh-100">
+
+<!-- Навигационное меню -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">💧 Водоканал - События</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Меню">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="/clients/getBishClients">Клиенты</a></li>
+                <li class="nav-item"><a class="nav-link" href="/saldo">Сальдо</a></li>
+                <li class="nav-item"><a class="nav-link" href="/pay">Оплаты</a></li>
+                <li class="nav-item"><a class="nav-link" href="/subsidy">Субсидии</a></li>
+                <li class="nav-item"><a class="nav-link" href="/indications">Показания</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/events">События</a></li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <span class="navbar-text me-3">👤 Пользователь</span>
+                <a class="btn btn-outline-light btn-sm me-2" href="/profile">Профиль</a>
+                <a class="btn btn-danger btn-sm" href="/logout">Выход</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Основное рабочее окно -->
+<div class="d-flex flex-grow-1">
+    <div class="sidebar d-flex flex-column bg-white border-end shadow-sm" style="width: 230px; min-height: 100vh;">
+        <div class="p-3 border-bottom">
+            <h5 class="fw-bold text-primary mb-0"><i class="fa-solid fa-droplet"></i> Водоканал</h5>
+        </div>
+        <ul class="nav flex-column mt-2">
+            <li class="nav-item mt-2 border-top pt-2 text-muted small px-3">Другое</li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/clients/getBishClients">
+                    <i class="fa-solid fa-users me-2 text-primary"></i> Клиенты
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/pay">
+                    <i class="fa-solid fa-credit-card me-2 text-success"></i> Оплаты
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/saldo">
+                    <i class="fa-solid fa-scale-balanced me-2 text-success"></i> Сальдо
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/indications">
+                    <i class="fa-solid fa-gauge me-2 text-danger"></i> Показания
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center py-2 px-3 text-secondary" href="/print/select">
+                    <i class="fa-solid fa-file-lines me-2 text-primary"></i> Отчёты
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="content d-flex flex-column p-2 flex-grow-1">
+        <div class="bg-white p-3 rounded shadow-sm d-flex flex-column" style="height: 80vh;">
+            <!-- Фильтры по дате -->
+            <div class="row g-2 align-items-end mb-3">
+                <div class="col-md-3">
+                    <label for="dateFrom" class="form-label">Дата с:</label>
+                    <input type="date" id="dateFrom" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="dateTo" class="form-label">Дата по:</label>
+                    <input type="date" id="dateTo" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" id="applyFilter">Применить</button>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-secondary w-100" id="resetFilter">Сброс</button>
+                </div>
+            </div>
+
+            <!-- Таблица событий -->
+            <div class="table-responsive flex-grow-1" style="overflow-y: auto;">
+                <table class="table table-sm table-hover align-middle">
+                    <thead class="table-light" style="position: sticky; top: 0; z-index: 2; background: #f8f9fa;">
+                        <tr>
+                            <th>#</th>
+                            <th>Тип</th>
+                            <th>Описание</th>
+                            <th>Дата/Время</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTableBody">
+                        <!-- Строки генерируются JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/jquery.min.js"></script>
+<script>
+    const eventsTableBody = document.getElementById('eventsTableBody');
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+
+    function formatDateTime(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const pad = n => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    async function loadEvents(from, to) {
+        try {
+            const params = new URLSearchParams();
+            if (from) params.set('from', from);
+            if (to) params.set('to', to + 'T23:59:59');
+            const resp = await fetch('/api/events?' + params.toString());
+            const data = await resp.json();
+            eventsTableBody.innerHTML = data.map((e, idx) => `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${e.eventType}</td>
+                    <td>${e.description}</td>
+                    <td>${formatDateTime(e.eventTime)}</td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error('Ошибка загрузки событий', err);
+        }
+    }
+
+    document.getElementById('applyFilter').addEventListener('click', () => {
+        loadEvents(dateFrom.value, dateTo.value);
+    });
+
+    document.getElementById('resetFilter').addEventListener('click', () => {
+        dateFrom.value = '';
+        dateTo.value = '';
+        loadEvents(null, null);
+    });
+
+    // По умолчанию загружаем текущий месяц
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    dateFrom.value = firstDay.toISOString().slice(0,10);
+    dateTo.value = now.toISOString().slice(0,10);
+    loadEvents(dateFrom.value, dateTo.value);
+</script>
+</body>
+</html>

@@ -225,9 +225,8 @@
 <!-- Нижний протокол -->
 <div class="bottom-panel">
     <strong>Протокол событий:</strong>
-    <ul>
-        <li>[12:15] Сформировано сальдо за Август 2025</li>
-        <li>[12:20] Пользователь удалил начисления клиента</li>
+    <ul id="eventsList">
+        <li>Загрузка...</li>
     </ul>
 </div>
 
@@ -274,5 +273,23 @@
 
 <script src="/js/bootstrap.bundle.min.js"></script>
 <script src="/js/subsidy.js"></script>
+<script>
+    async function loadRecentEvents() {
+        try {
+            const resp = await fetch('/api/events/recent');
+            const data = await resp.json();
+            const list = document.getElementById('eventsList');
+            if (!list) return;
+            list.innerHTML = data.map(e => {
+                const time = (e.eventTime || '').split('T')[1]?.substring(0,5) || '';
+                return `<li>[${time}] ${e.description}</li>`;
+            }).join('');
+        } catch (err) {
+            console.error('Ошибка загрузки событий', err);
+        }
+    }
+    loadRecentEvents();
+    setInterval(loadRecentEvents, 10 * 60 * 1000);
+</script>
 </body>
 </html>
