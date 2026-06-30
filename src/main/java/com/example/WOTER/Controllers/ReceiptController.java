@@ -101,19 +101,19 @@ public class ReceiptController {
         if (client.getClientType() != null && client.getClientType() == 2) {
             // Частный сектор
             java.util.List<ReceiptDTO> list = receiptService.getReceipts(month, year).stream()
-                    .filter(r -> r.getPersonalAccount() != null && r.getPersonalAccount().equals(persAcc))
+                    .filter(r -> r.getPersAccount() != null && r.getPersAccount().equals(persAcc))
                     .toList();
             pdfBytes = pdfService.generatePdf(list);
         } else if (client.getCounterInId() != null && client.getCounterInId() == 1) {
             // Показания (водомер)
             java.util.List<ReceiptDTO> list = receiptService.getReceiptsInd(month, year).stream()
-                    .filter(r -> r.getPersonalAccount() != null && r.getPersonalAccount().equals(persAcc))
+                    .filter(r -> r.getPersAccount() != null && r.getPersAccount().equals(persAcc))
                     .toList();
             pdfBytes = indPdfService.indicationsPdf(list);
         } else {
             // Квартирный сектор
             java.util.List<ReceiptDTO> list = apartmentService.getReceiptsApartment(month, year).stream()
-                    .filter(r -> r.getPersonalAccount() != null && r.getPersonalAccount().equals(persAcc))
+                    .filter(r -> r.getPersAccount() != null && r.getPersAccount().equals(persAcc))
                     .toList();
             pdfBytes = pdfServiceAppartment.generatePdf(list);
         }

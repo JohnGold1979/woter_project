@@ -216,7 +216,7 @@
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button class="btn btn-outline-primary addEditClient-outline-btn">Ред-ть</button>
-                                <button class="btn btn-outline-primary">Квитанция</button>
+                                <button class="btn btn-outline-primary" th:attr="data-account=${client.personalAccount}" onclick="openReceipt(this.dataset.account)">Квитанция</button>
                                 <button class="btn btn-outline-success pay-outline-btn">Опл</button>
                                 <button class="btn btn-outline-success subsidy-outline-btn">Суб</button>
                             </div>
@@ -469,6 +469,13 @@
 <script src="/js/bootstrap.bundle.min.js"></script>
 <script src="/js/woterclients.js"></script>
 <script src="/js/jquery.min.js"></script>
+<script>
+function openReceipt(account) {
+    const month = document.getElementById('monthSelect').value;
+    const year = document.getElementById('yearSelect').value;
+    window.open('/print/single?persAcc=' + encodeURIComponent(account) + '&month=' + month + '&year=' + year, '_blank');
+}
+</script>
 
 </body>
 </html>
