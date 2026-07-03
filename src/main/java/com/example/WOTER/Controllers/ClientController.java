@@ -2,6 +2,7 @@ package com.example.WOTER.Controllers;
 
 import com.example.WOTER.DTO.*;
 import com.example.WOTER.Repository.ClientRepository;
+import com.example.WOTER.Repository.EventRepository;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,9 +21,11 @@ import java.util.Map;
 public class ClientController {
 
     private final ClientRepository clientRepository;
+    private final EventRepository eventRepository;
     private static final Logger logger = LoggerFactory.getLogger(ClientController.class);
-    public ClientController(ClientRepository clientRepository) {
+    public ClientController(ClientRepository clientRepository, EventRepository eventRepository) {
         this.clientRepository = clientRepository;
+        this.eventRepository = eventRepository;
     }
 
     // HTML-страница со списком
@@ -179,8 +183,39 @@ public class ClientController {
     public ResponseEntity<?> saveClient(@RequestBody Map<String, Object> clientData) {
         try {
             System.out.println("Сохраняем нового клиента: " + clientData);
+            
+            // Validate required fields
+            List<String> missingFields = new java.util.ArrayList<>();
+            if (clientData.get("personalAccount") == null || ((String)clientData.get("personalAccount")).trim().isEmpty()) {
+                missingFields.add("Лицевой счёт");
+            }
+            if (clientData.get("clientName") == null || ((String)clientData.get("clientName")).trim().isEmpty()) {
+                missingFields.add("ФИО");
+            }
+            if (clientData.get("streetId") == null) {
+                missingFields.add("Улица");
+            }
+            if (clientData.get("flat") == null || ((String)clientData.get("flat")).trim().isEmpty()) {
+                missingFields.add("Квартира");
+            }
+            
+            if (!missingFields.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body("Заполните обязательные поля: " + String.join(", ", missingFields));
+            }
+            
             Long clientId = clientRepository.saveClient(clientData);
             clientRepository.saveClientAddress(clientId, clientData);
+            
+            // Логирование события
+            String persAcc = (String) clientData.get("personalAccount");
+            String clientName = (String) clientData.get("clientName");
+            eventRepository.saveEvent(
+                "CLIENT",
+                "Добавлен клиент: лицевой " + persAcc + " (" + clientName + ")",
+                LocalDateTime.now()
+            );
+            
             return ResponseEntity.ok("Клиент успешно добавлен! ID: " + clientId);
         } catch (Exception e) {
             e.printStackTrace();
@@ -194,7 +229,39 @@ public class ClientController {
     public ResponseEntity<?> updateClient(@RequestBody Map<String, Object> clientData) {
         try {
             System.out.println("Обновляем клиента: " + clientData);
+            
+            // Validate required fields
+            List<String> missingFields = new java.util.ArrayList<>();
+            if (clientData.get("personalAccount") == null || ((String)clientData.get("personalAccount")).trim().isEmpty()) {
+                missingFields.add("Лицевой счёт");
+            }
+            if (clientData.get("clientName") == null || ((String)clientData.get("clientName")).trim().isEmpty()) {
+                missingFields.add("ФИО");
+            }
+            if (clientData.get("streetId") == null) {
+                missingFields.add("Улица");
+            }
+            if (clientData.get("flat") == null || ((String)clientData.get("flat")).trim().isEmpty()) {
+                missingFields.add("Квартира");
+            }
+            
+            if (!missingFields.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body("Заполните обязательные поля: " + String.join(", ", missingFields));
+            }
+            
+            String persAcc = (String) clientData.get("personalAccount");
+            String clientName = (String) clientData.get("clientName");
+            
             clientRepository.updateClient(clientData);
+            
+            // Логирование события
+            eventRepository.saveEvent(
+                "CLIENT",
+                "Обновлён клиент: лицевой " + persAcc + " (" + clientName + ")",
+                LocalDateTime.now()
+            );
+            
             return ResponseEntity.ok("Клиент успешно обновлён!");
         } catch (Exception e) {
             e.printStackTrace();

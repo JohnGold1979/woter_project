@@ -188,9 +188,32 @@
 </div>
 
 <div class="border-top pt-2 mt-2 d-flex justify-content-between align-items-center">
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
-        📂 Импорт
-    </button>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+            📂 Импорт
+        </button>
+        <button class="btn btn-success" id="batchUploadBtn">
+            📁 Пакетная загрузка
+        </button>
+        <input type="file" id="batchFileInput" accept=".xlsx,.xls" multiple hidden>
+    </div>
+</div>
+
+<!-- Модальное окно прогресса пакетной загрузки -->
+<div class="modal fade" id="batchProgressModal" tabindex="-1" aria-labelledby="batchProgressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="batchProgressModalLabel">Загрузка файлов</h5>
+            </div>
+    <div class="modal-body">
+        <div id="batchStatusList" class="d-flex flex-wrap gap-2 mb-2"></div>
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" id="batchOverallBar" style="width:100%">Загрузка...</div>
+        </div>
+    </div>
+        </div>
+    </div>
 </div>
 
 <!-- Нижний протокол -->
@@ -244,6 +267,59 @@
 
 <script src="/js/bootstrap.bundle.min.js"></script>
 <script src="/js/pay.js"></script>
+<script>
+document.getElementById('batchUploadBtn').addEventListener('click', () => {
+    document.getElementById('batchFileInput').click();
+});
+
+document.getElementById('batchFileInput').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    const btn = document.getElementById('batchUploadBtn');
+    btn.disabled = true;
+    btn.textContent = 'Загрузка...';
+
+    const modalEl = document.getElementById('batchProgressModal');
+    const list = document.getElementById('batchStatusList');
+    const bar = document.getElementById('batchOverallBar');
+    list.innerHTML = '';
+    bar.style.width = '100%';
+    bar.textContent = 'Загрузка...';
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const resp = await fetch('/upload/payments', {
+                    method: 'POST',
+                    body: formData
+                });
+                const text = await resp.text();
+                const badge = document.createElement('span');
+                badge.className = 'badge text-bg-success d-inline-flex align-items-center gap-1';
+                badge.innerHTML = `${file.name} <span class="text-white">${text}</span>`;
+                list.appendChild(badge);
+            } catch (err) {
+                const badge = document.createElement('span');
+                badge.className = 'badge text-bg-danger';
+                badge.textContent = file.name;
+                list.appendChild(badge);
+            }
+        }
+
+    bar.textContent = 'Готово';
+    setTimeout(() => {
+        modal.hide();
+    }, 800);
+
+    btn.disabled = false;
+    btn.textContent = '📁 Пакетная загрузка';
+    e.target.value = '';
+});
+</script>
 <script>
     async function loadRecentEvents() {
         try {

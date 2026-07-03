@@ -185,8 +185,15 @@ document.querySelector("table").addEventListener("click", function (event) {
     const clientType = document.querySelector('input[name="clientType"]:checked').value;
     const counterIn = document.querySelector('input[name="counterIn"]:checked').value;
 
-    if (!persAcc || !clientName || !streetId || !house || !flat) {
-        alert("Заполните обязательные поля: Лицевой счёт, ФИО, Улица, Дом, Квартира");
+    // Enhanced validation with specific messages
+    const missingFields = [];
+    if (!persAcc) missingFields.push("Лицевой счёт");
+    if (!clientName) missingFields.push("ФИО");
+    if (!streetId) missingFields.push("Улица");
+    if (!flat) missingFields.push("Квартира");
+
+    if (missingFields.length > 0) {
+        alert("Заполните обязательные поля:\n" + missingFields.join(", "));
         return;
     }
 

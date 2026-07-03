@@ -33,11 +33,18 @@ public class EventRepository {
                 ws.date_calc as event_time
             FROM wot_saldo ws
             WHERE ws.date_calc >= ?
+            UNION ALL
+            SELECT 
+                we.event_type,
+                we.description,
+                we.event_time
+            FROM wot_events we
+            WHERE we.event_time >= ?
             ORDER BY event_time DESC
             LIMIT 50
         """;
 
-        return jdbcTemplate.query(sql, new Object[]{since, since}, (rs, rowNum) -> {
+        return jdbcTemplate.query(sql, new Object[]{since, since, since}, (rs, rowNum) -> {
             EventDTO dto = new EventDTO();
             dto.setEventType(rs.getString("event_type"));
             dto.setDescription(rs.getString("description"));
@@ -62,15 +69,27 @@ public class EventRepository {
                 ws.date_calc as event_time
             FROM wot_saldo ws
             WHERE ws.date_calc BETWEEN ? AND ?
+            UNION ALL
+            SELECT 
+                we.event_type,
+                we.description,
+                we.event_time
+            FROM wot_events we
+            WHERE we.event_time BETWEEN ? AND ?
             ORDER BY event_time DESC
         """;
 
-        return jdbcTemplate.query(sql, new Object[]{from, to, from, to}, (rs, rowNum) -> {
+        return jdbcTemplate.query(sql, new Object[]{from, to, from, to, from, to}, (rs, rowNum) -> {
             EventDTO dto = new EventDTO();
             dto.setEventType(rs.getString("event_type"));
             dto.setDescription(rs.getString("description"));
             dto.setEventTime(rs.getTimestamp("event_time").toLocalDateTime());
             return dto;
         });
+    }
+
+    public void saveEvent(String eventType, String description, LocalDateTime eventTime) {
+        String sql = "INSERT INTO wot_events (event_type, description, event_time) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sql, eventType, description, eventTime);
     }
 }
