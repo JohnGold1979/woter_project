@@ -253,11 +253,13 @@ public List<PayAllReportDTO> getPayAllReport(int montId, int yearId) {
 //----------------------------------------------------------------------------------------------------------------------
     public List<HouseDTO> getHouses() {
         String sql = """
-          select a.id as houseId, a.house, a.streetId
-                  from
-                  (SELECT wh.id, wh.house, wh.street_id as streetId,
-                   (SELECT STREET_NAME FROM WOT_STREETS WHERE wh.STREET_ID = ID) || ' '|| WH.HOUSE AS houseName
-                   FROM WOT_HOUSES wh order by wh.orders)a
+          SELECT a.id as houseId, a.house, a.streetId, a.houseName
+          FROM (
+              SELECT wh.id, wh.house, wh.street_id as streetId,
+                     (SELECT STREET_NAME FROM WOT_STREETS WHERE wh.STREET_ID = WOT_STREETS.ID) || ' ' || wh.house AS houseName
+              FROM WOT_HOUSES wh
+              ORDER BY wh.orders
+          ) a
         """;
 
         return jdbcTemplate.query(sql, new Object[]{}, (rs, rowNum) -> {
@@ -286,5 +288,49 @@ public List<PayAllReportDTO> getPayAllReport(int montId, int yearId) {
         );
     }
 
+    public List<DislocationDTO> getDislocationByStreets(int month, int year) {
+        String sql = """
+            SELECT s.street_name as name,
+                   COALESCE(SUM(wc.cnt_pers), 0) as peopleCount
+            FROM wot_streets s
+            LEFT JOIN wot_address a ON a.street_id = s.id
+            LEFT JOIN wot_clients wc ON wc.id = a.client_id
+                AND wc.client_type_id = 2
+                AND wc.status_id = 1
+            LEFT JOIN wot_saldo ws ON ws.client_id = wc.id
+                AND ws.month_id = ?
+                AND ws.year_id = ?
+                AND ws.system_id = 1
+            WHERE s.system_id = 1
+            GROUP BY s.street_name
+            ORDER BY s.street_name
+        """;
+        return jdbcTemplate.query(sql, new Object[]{month, year}, (rs, rowNum) ->
+                new DislocationDTO(rs.getString("name"), rs.getInt("peopleCount"))
+        );
+    }
+
+    public List<DislocationDTO> getDislocationByHouses(int month, int year) {
+        String sql = """
+            SELECT (s.street_name || ' ' || h.house) as name,
+                   COALESCE(SUM(wc.cnt_pers), 0) as peopleCount
+            FROM wot_houses h
+            JOIN wot_streets s ON s.id = h.street_id
+            LEFT JOIN wot_address a ON a.house_id = h.id
+            LEFT JOIN wot_clients wc ON wc.id = a.client_id
+                AND wc.client_type_id = 1
+                AND wc.status_id = 1
+            LEFT JOIN wot_saldo ws ON ws.client_id = wc.id
+                AND ws.month_id = ?
+                AND ws.year_id = ?
+                AND ws.system_id = 1
+            WHERE s.system_id = 1
+            GROUP BY s.street_name      
+            ORDER BY s.street_name, h.house
+        """;
+        return jdbcTemplate.query(sql, new Object[]{month, year}, (rs, rowNum) ->
+                new DislocationDTO(rs.getString("name"), rs.getInt("peopleCount"))
+        );
+    }
 
 }

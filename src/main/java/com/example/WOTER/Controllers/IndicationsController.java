@@ -1,6 +1,7 @@
 package com.example.WOTER.Controllers;
 
 import com.example.WOTER.DTO.HouseAllReportDTO;
+import com.example.WOTER.Repository.EventRepository;
 import com.example.WOTER.Repository.IndicationsRepository;
 import com.example.WOTER.Services.ExcelImportService;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,11 +19,14 @@ import java.util.Map;
 public class IndicationsController {
     private final IndicationsRepository indicationsRepository;
     private final ExcelImportService excelImportService;
+    private final EventRepository eventRepository;
 
     public IndicationsController(IndicationsRepository indicationsRepository,
-                                 ExcelImportService excelImportService) {
+                                 ExcelImportService excelImportService,
+                                 EventRepository eventRepository) {
         this.indicationsRepository = indicationsRepository;
         this.excelImportService = excelImportService;
+        this.eventRepository = eventRepository;
     }
 
     @GetMapping("/indications")
@@ -92,6 +97,16 @@ public class IndicationsController {
 
         try {
             String mes = indicationsRepository.insertInd(ind);
+            
+            // Логирование события
+            eventRepository.saveEvent(
+                "INDICATION",
+                "Показания: лицевой " + ind.getPersonalAccount() + 
+                ", месяц " + ind.getMonthId() + "/" + ind.getYearId() + 
+                ", расход " + ind.getM3() + " м³",
+                LocalDateTime.now()
+            );
+            
             return ResponseEntity.ok(mes);
         } catch (Exception e) {
             e.printStackTrace();

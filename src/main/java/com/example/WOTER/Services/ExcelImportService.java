@@ -1,11 +1,13 @@
 package com.example.WOTER.Services;
 
+import com.example.WOTER.Repository.EventRepository;
 import com.example.WOTER.Repository.IndicationsRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,9 +15,11 @@ import java.util.List;
 public class ExcelImportService {
 
     private final IndicationsRepository indicationsRepository;
+    private final EventRepository eventRepository;
 
-    public ExcelImportService(IndicationsRepository indicationsRepository) {
+    public ExcelImportService(IndicationsRepository indicationsRepository, EventRepository eventRepository) {
         this.indicationsRepository = indicationsRepository;
+        this.eventRepository = eventRepository;
     }
 
     public ImportResult importIndicationsFromExcel(MultipartFile file, int month, int year) {
@@ -63,6 +67,14 @@ public class ExcelImportService {
             e.printStackTrace();
             return new ImportResult(0, List.of(new ImportError("", "",
                     "Ошибка чтения файла: " + e.getMessage())));
+        }
+
+        if (successCount > 0) {
+            eventRepository.saveEvent(
+                "INDICATION_IMPORT",
+                "Импорт показаний из Excel: " + successCount + " записей за " + month + "/" + year,
+                LocalDateTime.now()
+            );
         }
 
         return new ImportResult(successCount, errors);

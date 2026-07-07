@@ -54,14 +54,13 @@ public class PdfReportAccountsService {
         BigDecimal totalCredetOutAll = BigDecimal.ZERO;
         BigDecimal totalLateFee = BigDecimal.ZERO;
 
-
-
         for (HouseDTO house : houses) {
             int houseId = house.getHouseId();
             String houseName = house.getHouseName();
 
             List<ReportRowDTO> rows = reportService.getHouseReport(month, year, houseId);
             if (rows.isEmpty()) continue;
+
             // ====== Заголовок ======
             Paragraph title = new Paragraph(
                     "Отчёт по дому: " + houseName + " (" + month + "/" + year + ")", titleFont);
@@ -116,9 +115,9 @@ public class PdfReportAccountsService {
                 sumTaxIn = sumTaxIn.add(nvl(row.getTaxIn()));
                 sumPaid = sumPaid.add(nvl(row.getPaydIn()));
                 sumRemoval = sumRemoval.add(nvl(row.getSubsidy()));
+                sumLateFee = sumLateFee.add(nvl(row.getLateFee()));
                 sumDebetOut = sumDebetOut.add(nvl(row.getDebetOut()));
                 sumCredetOut = sumCredetOut.add(nvl(row.getCredetOut()));
-
             }
 
             // === Итог по дому ===
@@ -134,6 +133,7 @@ public class PdfReportAccountsService {
             table.addCell(makeTotalCell(sumTaxIn));
             table.addCell(makeTotalCell(sumPaid));
             table.addCell(makeTotalCell(sumRemoval));
+            table.addCell(makeTotalCell(sumLateFee));
             table.addCell(makeTotalCell(sumDebetOut));
             table.addCell(makeTotalCell(sumCredetOut));
 
@@ -147,9 +147,9 @@ public class PdfReportAccountsService {
             totalTaxAll = totalTaxAll.add(sumTaxIn);
             totalPaidAll = totalPaidAll.add(sumPaid);
             totalRemovalAll = totalRemovalAll.add(sumRemoval);
+            totalLateFee = totalLateFee.add(sumLateFee);
             totalDebetOutAll = totalDebetOutAll.add(sumDebetOut);
             totalCredetOutAll = totalCredetOutAll.add(sumCredetOut);
-
         }
 
         // === Итоговая страница по всем домам ===
@@ -165,7 +165,7 @@ public class PdfReportAccountsService {
         totalTable.setWidths(new float[]{5f,5f,5f,5f,5f,5f,5f,5f});
 
         String[] totalHeaders = {"Дебет нач.","Кредит нач.","Начислено","Налог 3%",
-                "Оплачено","Субсидии","Дебет кон.","Кредит кон."};
+                "Оплачено","Субсидии","Пеня","Дебет кон.","Кредит кон."};
         for (String h : totalHeaders) totalTable.addCell(makeChargeHeader(h));
 
         totalTable.addCell(makeTotalCell(totalDebetInAll));
@@ -174,6 +174,7 @@ public class PdfReportAccountsService {
         totalTable.addCell(makeTotalCell(totalTaxAll));
         totalTable.addCell(makeTotalCell(totalPaidAll));
         totalTable.addCell(makeTotalCell(totalRemovalAll));
+        totalTable.addCell(makeTotalCell(totalLateFee));
         totalTable.addCell(makeTotalCell(totalDebetOutAll));
         totalTable.addCell(makeTotalCell(totalCredetOutAll));
 
@@ -287,7 +288,7 @@ public void generatePrivateReport(
             sumCredetOut = sumCredetOut.add(nvl(row.getCredetOut()));
         }
 
-        // === Итог по дому ===
+        // === Итог по улице ===
         PdfPCell totalCell = new PdfPCell(new Phrase("ИТОГО по улице", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9)));
         totalCell.setColspan(4);
         totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -415,7 +416,7 @@ public void generateAllHousesReport(
 
     // === Цикл по строкам ===
     for (HouseAllReportDTO row : rows) {
-        table.addCell(makeChargeDataInfo(row.getHouseName())); // тут, если это строка, добавь flat / name
+        table.addCell(makeChargeDataInfo(row.getHouseName()));
         table.addCell(makeChargeData(toStr(row.getDebetIn())));
         table.addCell(makeChargeData(toStr(row.getCredetIn())));
         table.addCell(makeChargeData(toStr(row.getChargedMoney())));
@@ -439,7 +440,6 @@ public void generateAllHousesReport(
         sumCredetOut = sumCredetOut.add(nvl(row.getCredetOut()));
     }
 
-    // === Добавляем итоговую строку ===
     // === Добавляем итоговую строку ===
     table.addCell(makeTotalCell2("ИТОГО:"));
     table.addCell(makeTotalCell2(toStr2(sumDebetIn)));
@@ -512,7 +512,7 @@ public void generateAllStreetsReport(
 
     // === Цикл по строкам ===
     for (StreetAllReportDTO row : rows) {
-        table.addCell(makeChargeDataInfo(row.getStreetName())); // тут, если это строка, добавь flat / name
+        table.addCell(makeChargeDataInfo(row.getStreetName()));
         table.addCell(makeChargeData(toStr(row.getDebetIn())));
         table.addCell(makeChargeData(toStr(row.getCredetIn())));
         table.addCell(makeChargeData(toStr(row.getChargedMoney())));
@@ -535,7 +535,6 @@ public void generateAllStreetsReport(
         sumCredetOut = sumCredetOut.add(nvl(row.getCredetOut()));
     }
 
-    // === Добавляем итоговую строку ===
     // === Добавляем итоговую строку ===
     table.addCell(makeTotalCell2("ИТОГО:"));
     table.addCell(makeTotalCell2(toStr2(sumDebetIn)));
@@ -610,7 +609,7 @@ public void generateAllStreetsReport(
 
         // === Цикл по строкам ===
         for (PayAllReportDTO row : rows) {
-            table.addCell(makeChargeDataInfo(row.getDays())); // тут, если это строка, добавь flat / name
+            table.addCell(makeChargeDataInfo(row.getDays()));
             table.addCell(makeChargeData(toStr(row.getAmount())));
             table.addCell(makeChargeData(toStr(row.getTaxIn())));
             table.addCell(makeChargeData(toStr(row.getPayIn())));
@@ -623,7 +622,6 @@ public void generateAllStreetsReport(
         }
 
         // === Добавляем итоговую строку ===
-        // === Добавляем итоговую строку ===
         table.addCell(makeTotalCell2("ИТОГО:"));
         table.addCell(makeTotalCell2(toStr2(sumAmount)));
         table.addCell(makeTotalCell2(toStr2(sumTaxIn)));
@@ -632,6 +630,61 @@ public void generateAllStreetsReport(
         // ✅ добавляем таблицу в документ
         document.add(table);
 
+        document.close();
+    }
+//----------------------------------------------------------------------------------------------------------------------
+    public void generateDislocationReport(
+            List<DislocationDTO> data,
+            int month,
+            int year,
+            String title,
+            OutputStream out
+    ) throws DocumentException {
+        
+        Document document = new Document(PageSize.A4.rotate(), 30, 30, 60, 30);
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+
+        String period = String.format("%02d.%d", month, year);
+        writer.setPageEvent(new HeaderFooterPageEvent(
+                "Дислокация населения (" + title + ")",
+                period
+        ));
+        document.open();
+
+        PdfPTable table = new PdfPTable(2);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{30f, 70f});
+
+        PdfPCell header1 = new PdfPCell(new Phrase("Наименование", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        header1.setHorizontalAlignment(Element.ALIGN_CENTER);
+        header1.setBackgroundColor(new Color(230, 230, 230));
+        table.addCell(header1);
+
+        PdfPCell header2 = new PdfPCell(new Phrase("Количество человек", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        header2.setHorizontalAlignment(Element.ALIGN_CENTER);
+        header2.setBackgroundColor(new Color(230, 230, 230));
+        table.addCell(header2);
+
+        table.setHeaderRows(1);
+
+        int totalPeople = 0;
+        for (DislocationDTO row : data) {
+            table.addCell(makeChargeDataInfo(row.getName()));
+            table.addCell(makeChargeData(String.valueOf(row.getPeopleCount())));
+            totalPeople += row.getPeopleCount();
+        }
+
+        PdfPCell totalCell = new PdfPCell(new Phrase("ИТОГО:", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalCell.setBackgroundColor(new Color(230, 230, 230));
+        table.addCell(totalCell);
+
+        PdfPCell totalPeopleCell = new PdfPCell(new Phrase(String.valueOf(totalPeople), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
+        totalPeopleCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalPeopleCell.setBackgroundColor(new Color(230, 230, 230));
+        table.addCell(totalPeopleCell);
+
+        document.add(table);
         document.close();
     }
 //----------------------------------------------------------------------------------------------------------------------

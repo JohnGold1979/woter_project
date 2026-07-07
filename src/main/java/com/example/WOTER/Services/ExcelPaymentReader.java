@@ -30,57 +30,72 @@ public class ExcelPaymentReader {
         try (workbook) {
             Sheet sheet = workbook.getSheetAt(0);
 
-            // пропускаем первую строку (заголовки)
+            // пропускаем первые 4 строки (заголовки)
             for (int i = 4; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
                 ExcelPaymentDTO dto = new ExcelPaymentDTO();
 
-                // № (пропускаем — не нужен)
                 // Дата и время
                 Cell dateCell = row.getCell(1);
-               // System.out.println(dateCell);
-                if (dateCell != null ){
-                    if (dateCell.getCellType() == CellType.NUMERIC) {
-                        // если Excel хранит дату как число
-                        if (DateUtil.isCellDateFormatted(dateCell)) {
-                            dto.setPayDate(dateCell.getDateCellValue()
-                                    .toInstant()
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDateTime());
-                        }
-                    } else if (dateCell.getCellType() == CellType.STRING) {
-                        // если дата хранится строкой
-                        String dateStr = dateCell.getStringCellValue().trim();
-                        if (!"ИТОГО:".equalsIgnoreCase(dateStr)) {
-                            if (!dateStr.isEmpty()) {
-                                try {
-                                    dto.setPayDate(LocalDateTime.parse(
-                                            dateStr,
-                                            java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")
-                                    ));
-                                } catch (Exception e) {
-                                    System.out.println("⚠ Не удалось распарсить дату: " + dateStr);
-                                }
-                            }
-                        } else {
-                            continue;
+                if (dateCell == null) continue; // если нет даты, пропускаем строку
+                
+                // Пропускаем заголовки и служебные строки
+                if (dateCell.getCellType() == CellType.STRING) {
+                    String dateStr = dateCell.getStringCellValue().trim();
+                    if (dateStr.isEmpty() || 
+                        dateStr.contains("Дата и время") || 
+                        dateStr.contains("ИТОГО:") ||
+                        dateStr.matches(".*[a-zA-Zа-яА-ЯёЁ]+.*")) {
+                        continue; // пропускаем всю строку
+                    }
+                }
+                
+                // Парсим дату
+                if (dateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dateCell)) {
+                    dto.setPayDate(dateCell.getDateCellValue()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime());
+                } else if (dateCell.getCellType() == CellType.STRING) {
+                    String dateStr = dateCell.getStringCellValue().trim();
+                    if (!dateStr.isEmpty() && !"ИТОГО:".equalsIgnoreCase(dateStr)) {
+                        try {
+                            dto.setPayDate(LocalDateTime.parse(
+                                    dateStr,
+                                    java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")
+                            ));
+                        } catch (Exception e) {
+                            System.out.println("⚠ Не удалось распарсить дату: " + dateStr);
+                            continue; // если дату не распарсили, пропускаем строку
                         }
                     }
                 }
+                
                 // Лицевой счёт
                 Cell persAcctCell = row.getCell(3);
-                if (persAcctCell != null ){
+                if (persAcctCell != null && persAcctCell.getCellType() == CellType.STRING) {
                     dto.setPersAcc(persAcctCell.getStringCellValue().trim());
-                    System.out.println(persAcctCell);
                 }
-                // Сумма
+                
+                // Сумма - обрабатываем NUMERIC и STRING
                 Cell amountCell = row.getCell(5);
-                System.out.println(amountCell);
                 if (amountCell != null) {
-                    dto.setAmount(BigDecimal.valueOf(amountCell.getNumericCellValue()));
+                    if (amountCell.getCellType() == CellType.NUMERIC) {
+                        dto.setAmount(BigDecimal.valueOf(amountCell.getNumericCellValue()));
+                    } else if (amountCell.getCellType() == CellType.STRING) {
+                        String amountStr = amountCell.getStringCellValue().trim();
+                        if (!amountStr.isEmpty()) {
+                            try {
+                                dto.setAmount(new BigDecimal(amountStr.replace(",", ".")));
+                            } catch (Exception e) {
+                                System.out.println("⚠ Не удалось распарсить сумму: " + amountStr);
+                            }
+                        }
+                    }
                 }
+                
                 // ⚡ лог для отладки (построчный вывод)
                 System.out.print("Импорт: " + dto);
                 payments.add(dto);

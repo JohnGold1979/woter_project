@@ -15,7 +15,7 @@
             overflow-y: auto;
         }
         .table-private td { background-color: #d4edda !important; }
-        .table-ind     td { background-color: #FF8E64 !important; }
+         .table-ind     td { background-color: #FF8E64 !important; border: 1px solid #e0e0e0 !important; }
         .table-private:hover td { background-color: #c8e6c9 !important; }
 
 

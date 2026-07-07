@@ -1,5 +1,6 @@
 package com.example.WOTER.Controllers;
 
+import com.example.WOTER.DTO.DislocationDTO;
 import com.example.WOTER.DTO.HouseDTO;
 import com.example.WOTER.DTO.StreetDTO;
 import com.example.WOTER.Services.PdfReportAccountsService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -111,6 +113,35 @@ public class ReportAccountsController {
 
             // создаём общий PDF со всеми домами
             pdfService.generateAllStreetsReport(month, year, reportService, out);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping("/report/dislocation")
+    public void reportDislocation(
+            @RequestParam int month,
+            @RequestParam int year,
+            HttpServletResponse response
+    ) throws IOException, DocumentException {
+        response.setContentType("application/pdf");
+        response.setHeader(
+                "Content-Disposition",
+                "inline; filename=report_dislocation_" + month + "_" + year + ".pdf"
+        );
+
+        try (var out = response.getOutputStream()) {
+            // Get dislocation data for houses (apartment sector)
+            List<DislocationDTO> housesData = reportService.getDislocationByHouses(month, year);
+            // Get dislocation data for streets (private sector)
+            List<DislocationDTO> streetsData = reportService.getDislocationByStreets(month, year);
+            
+            // Combine both lists
+            List<DislocationDTO> allData = new ArrayList<>(housesData);
+            allData.addAll(streetsData);
+            
+            pdfService.generateDislocationReport(allData, month, year, "Дома (квартирный сектор) + Улицы (частный сектор)", out);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -1,33 +1,37 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const rows = document.querySelectorAll("table tbody tr");
     const yearSelect = document.getElementById("yearSelect");
-    const secondTableBody = document.querySelector("#indicationsTable tbody");
-    const tableRows = document.querySelectorAll("#clientsTab tbody tr"); // <-- оставляем только это
+    const tableRows = document.querySelectorAll("#clientsTab tbody tr");
     const submitBtn = document.getElementById("submitIndBtn");
+    const indicationsHeader = document.getElementById("indicationsHeader");
+    const headerPersAcc = document.getElementById("headerPersAcc");
+    const headerClName = document.getElementById("headerClName");
 
-    // Замените существующий обработчик кликов по строкам на этот:
-
+    // Row click handler for clients table
     tableRows.forEach(row => {
         row.addEventListener("click", () => {
-            // убрать выделение со всех строк
             tableRows.forEach(r => r.classList.remove("table-active"));
-            // подсветить текущую
             row.classList.add("table-active");
 
-            // Загрузить показания для выбранного клиента
-            const persAccount = row.querySelector("td:nth-child(3)").innerText;
+            const persAccount = row.cells[2].innerText;
+            const clientName = row.cells[1].innerText;
             const year = yearSelect.value;
-
+            
+            // Update header with client info
+            if (indicationsHeader && headerPersAcc && headerClName) {
+                headerPersAcc.textContent = persAccount;
+                headerClName.textContent = clientName;
+                indicationsHeader.style.display = 'block';
+            }
+            
             fetchIndicationsForClient(persAccount, year);
         });
     });
 
+    // Load last period
     fetch("/clients/period/last")
         .then(res => res.json())
         .then(data => {
             const monthSelect = document.getElementById("monthSelect");
-            const yearSelect = document.getElementById("yearSelect");
-
             if (monthSelect && yearSelect) {
                 monthSelect.value = data.monthId;
                 yearSelect.value = data.yearId;
@@ -35,32 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => console.error("Ошибка загрузки периода:", err));
 
-    rows.forEach(row => {
-        row.addEventListener("click", () => {
-            const persAccount = row.querySelector("td:nth-child(3)").innerText;
-            const year = yearSelect.value;
-
-            fetch(`/indications/${persAccount}/${year}`)
-                .then(res => res.json())
-                .then(data => {
-                    secondTableBody.innerHTML = "";
-                    data.forEach(ind => {
-                        secondTableBody.innerHTML += `
-                          <tr>
-                            <td>${ind.monthId}</td>
-                            <td>${ind.indication}</td>
-                            <td>${ind.m3}</td>
-                            <td>${ind.tariff}</td>
-                            <td>${ind.summa}</td>
-                            <td class="text-center">
-                              <button class="btn btn-sm btn-success">Ред-ть</button>
-                            </td>
-                          </tr>`;
-                    });
-                });
-        });
-    });
-
+    // Ctrl+Enter to add new indication
     document.addEventListener("keydown", function (event) {
         if (event.code == 'Enter' && event.ctrlKey) {
             let modal = new bootstrap.Modal(document.getElementById("indAdd"));
@@ -73,13 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             let persAcc = selectedRow.cells[2].textContent.trim();
-            console.log(persAcc);
 
             fetch(`/clients/${persAcc}`)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Клиент не найден");
-                    }
+                    if (!response.ok) throw new Error("Клиент не найден");
                     return response.json();
                 })
                 .then(data => {
@@ -90,65 +66,59 @@ document.addEventListener("DOMContentLoaded", () => {
                 .catch(err => console.error("Ошибка загрузки данных клиента:", err));
         }
     });
-    //---------------------------------------------------------------------------------
+
+    // Submit new indication
     if (submitBtn) {
-            submitBtn.addEventListener("click", async () => {
-                const persAcc = document.getElementById("persAccInd").value.trim();
-                const clInd = document.getElementById("clInd").value.trim();
-                const month = document.getElementById("monthSelect").value;
-                const year = document.getElementById("yearSelect").value;
+        submitBtn.addEventListener("click", async () => {
+            const persAcc = document.getElementById("persAccInd").value.trim();
+            const clInd = document.getElementById("clInd").value.trim();
+            const month = document.getElementById("monthSelect").value;
+            const year = yearSelect.value;
 
-                if (!persAcc) {
-                    alert("Ошибка: лицевой счёт пустой!");
+            if (!persAcc) {
+                alert("Ошибка: лицевой счёт пустой!");
+                return;
+            }
+            if (!clInd) {
+                alert("Ошибка: введите показания!");
+                return;
+            }
+
+            const payload = {
+                personalAccount: persAcc,
+                monthId: parseInt(month),
+                yearId: parseInt(year),
+                m3: parseFloat(clInd)
+            };
+
+            try {
+                const response = await fetch("/indications/addind", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = await response.text();
+                if (!response.ok) {
+                    alert("Ошибка: " + text);
                     return;
                 }
-                if (!clInd) {
-                    alert("Ошибка: введите показания!");
-                    return;
-                }
 
-                const payload = {
-                    personalAccount: persAcc,
-                    monthId: parseInt(month),
-                    yearId: parseInt(year),
-                    m3: parseFloat(clInd)
-                };
+                alert("Успешно: " + text);
 
-                try {
-                    const response = await fetch("/indications/addind", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify(payload)
-                    });
+                const modalEl = document.getElementById("indAdd");
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
 
-                    const text = await response.text();
+                document.getElementById("clInd").value = "";
+            } catch (err) {
+                console.error("Ошибка отправки:", err);
+                alert("Ошибка отправки: " + err.message);
+            }
+        });
+    }
 
-                    if (!response.ok) {
-                        alert("Ошибка: " + text);
-                        return;
-                    }
-
-                    alert("Успешно: " + text);
-
-                    // закрыть модалку
-                    const modalEl = document.getElementById("indAdd");
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-
-                    // очистить поле показаний
-                    document.getElementById("clInd").value = "";
-                } catch (err) {
-                    console.error("Ошибка отправки:", err);
-                    alert("Ошибка отправки: " + err.message);
-                }
-            });
-        }
-
-    // Добавьте в indication.js
-
-    // Обработка загрузки Excel файла
+    // Excel import handler
     document.getElementById('uploadExcelBtn')?.addEventListener('click', async function() {
         const fileInput = document.getElementById('excelFile');
         const file = fileInput.files[0];
@@ -181,7 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const result = await response.json();
-
             resultDiv.style.display = 'block';
 
             if (response.ok || response.status === 206) {
@@ -204,18 +173,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 resultDiv.innerHTML = html;
 
-                // Обновляем таблицу показаний для текущего выбранного клиента
                 const selectedRow = document.querySelector("#clientsTab tbody tr.table-active");
                 if (selectedRow) {
                     const persAccount = selectedRow.cells[2].textContent.trim();
-                    const yearVal = document.getElementById("yearSelect").value;
+                    const yearVal = yearSelect.value;
                     fetchIndicationsForClient(persAccount, yearVal);
                 }
 
-                // Очищаем поле файла
                 fileInput.value = '';
-
-                // Через 3 секунды закрываем модалку
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('importExcelModal'));
                     if (modal) modal.hide();
@@ -240,7 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Функция для обновления таблицы показаний
+    // Fetch indications for selected client
     function fetchIndicationsForClient(persAccount, year) {
         const secondTableBody = document.querySelector("#indicationsTable tbody");
 
@@ -253,26 +218,124 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
                 data.forEach(ind => {
-                    secondTableBody.innerHTML += `
-                      <tr>
-                        <td>${getMonthName(ind.monthId)}</td>
-                        <td>${ind.indication || 0}</td>
-                        <td>${ind.m3 || 0}</td>
-                        <td>${ind.tariff || 0}</td>
-                        <td>${ind.summa || 0}</td>
-                        <td class="text-center">
-                          <button class="btn btn-sm btn-success" onclick="editIndication(${ind.id})">Ред-ть</button>
-                         </td>
-                      </tr>`;
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                      <td>${getMonthName(ind.monthId)}</td>
+                      <td>${ind.indication || 0}</td>
+                      <td>${ind.m3 || 0}</td>
+                      <td>${ind.tariff || 0}</td>
+                      <td>${ind.summa || 0}</td>
+                      <td class="text-center">
+                        <button class="btn btn-sm btn-success edit-ind-btn" 
+                                data-id="${ind.id}" 
+                                data-month="${ind.monthId}" 
+                                data-year="${ind.yearId || year}"
+                                data-indication="${ind.indication || 0}">Ред-ть</button>
+                       </td>
+                    `;
+                    secondTableBody.appendChild(row);
+                });
+                
+                // Add click handlers to edit buttons
+                document.querySelectorAll('.edit-ind-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const indId = this.dataset.id;
+                        const month = this.dataset.month;
+                        const yearVal = this.dataset.year;
+                        const indication = this.dataset.indication;
+                        openEditModal(indId, month, yearVal, indication);
+                    });
                 });
             })
             .catch(err => console.error("Ошибка загрузки показаний:", err));
     }
 
-    // Вспомогательная функция для получения названия месяца
     function getMonthName(monthId) {
         const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
                         'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
         return months[monthId - 1] || monthId;
+    }
+
+    function openEditModal(indId, month, year, indicationValue) {
+        const selectedRow = document.querySelector("#clientsTab tbody tr.table-active");
+        if (!selectedRow) {
+            alert("Выберите клиента из таблицы");
+            return;
+        }
+
+        const persAcc = selectedRow.cells[2].textContent.trim();
+        const clientName = selectedRow.cells[1].textContent.trim();
+        const address = selectedRow.cells[3].textContent.trim();
+
+        document.getElementById("editIndId").value = indId;
+        document.getElementById("editPersAcc").value = persAcc;
+        document.getElementById("editClName").value = clientName;
+        document.getElementById("editAddress").value = address;
+        document.getElementById("editMonth").value = getMonthName(parseInt(month));
+        document.getElementById("editYear").value = year;
+        document.getElementById("editIndication").value = indicationValue;
+
+        window.editingIndication = {
+            id: indId,
+            personalAccount: persAcc,
+            monthId: parseInt(month),
+            yearId: parseInt(year)
+        };
+
+        const modal = new bootstrap.Modal(document.getElementById("indEdit"));
+        modal.show();
+    }
+
+    // Update button handler
+    const updateBtn = document.getElementById("updateIndBtn");
+    if (updateBtn) {
+        updateBtn.addEventListener("click", async function() {
+            if (!window.editingIndication) return;
+
+            const newIndication = document.getElementById("editIndication").value.trim();
+            if (!newIndication) {
+                alert("Введите показания");
+                return;
+            }
+
+            const payload = {
+                personalAccount: window.editingIndication.personalAccount,
+                monthId: window.editingIndication.monthId,
+                yearId: window.editingIndication.yearId,
+                m3: parseFloat(newIndication)
+            };
+
+            try {
+                const response = await fetch("/indications/addind", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = await response.text();
+                if (!response.ok) {
+                    alert("Ошибка: " + text);
+                    return;
+                }
+
+                alert("Показания обновлены!");
+                
+                const modalEl = document.getElementById("indEdit");
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                window.editingIndication = null;
+
+                const selectedRow = document.querySelector("#clientsTab tbody tr.table-active");
+                if (selectedRow) {
+                    const persAcc = selectedRow.cells[2].textContent.trim();
+                    const yearVal = yearSelect.value;
+                    fetchIndicationsForClient(persAcc, yearVal);
+                }
+            } catch (err) {
+                console.error("Ошибка отправки:", err);
+                alert("Ошибка отправки: " + err.message);
+            }
+        });
     }
 });

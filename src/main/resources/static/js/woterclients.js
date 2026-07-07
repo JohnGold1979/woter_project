@@ -447,7 +447,7 @@ function submitPaymentSub() {
     })
     .then(msg => {
         alert(msg);
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('PayClientSub')).hide();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('PayClientSubsidy')).hide();
         document.getElementById("payFormSub").reset();
     })
     .catch(err => {
