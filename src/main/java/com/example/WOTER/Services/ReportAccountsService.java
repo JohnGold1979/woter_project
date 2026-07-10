@@ -325,7 +325,7 @@ public List<PayAllReportDTO> getPayAllReport(int montId, int yearId) {
                 AND ws.year_id = ?
                 AND ws.system_id = 1
             WHERE s.system_id = 1
-            GROUP BY s.street_name      
+            GROUP BY s.street_name, h.house
             ORDER BY s.street_name, h.house
         """;
         return jdbcTemplate.query(sql, new Object[]{month, year}, (rs, rowNum) ->

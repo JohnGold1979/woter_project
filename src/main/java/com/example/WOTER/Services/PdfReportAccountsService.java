@@ -43,16 +43,16 @@ public class PdfReportAccountsService {
         document.open();
         Font titleFont = new Font(Font.HELVETICA, 14, Font.BOLD);
 
-        // === Общие суммы по всем домам ===
-        BigDecimal totalDebetInAll = BigDecimal.ZERO;
-        BigDecimal totalCredetInAll = BigDecimal.ZERO;
-        BigDecimal totalChargedAll = BigDecimal.ZERO;
-        BigDecimal totalTaxAll = BigDecimal.ZERO;
-        BigDecimal totalPaidAll = BigDecimal.ZERO;
-        BigDecimal totalRemovalAll = BigDecimal.ZERO;
-        BigDecimal totalDebetOutAll = BigDecimal.ZERO;
-        BigDecimal totalCredetOutAll = BigDecimal.ZERO;
-        BigDecimal totalLateFee = BigDecimal.ZERO;
+    // === Общие суммы по всем домам ===
+    BigDecimal totalDebetInAll = BigDecimal.ZERO;
+    BigDecimal totalCredetInAll = BigDecimal.ZERO;
+    BigDecimal totalChargedAll = BigDecimal.ZERO;
+    BigDecimal totalTaxAll = BigDecimal.ZERO;
+    BigDecimal totalPaidAll = BigDecimal.ZERO;
+    BigDecimal totalRemovalAll = BigDecimal.ZERO;
+    BigDecimal totalLateFee = BigDecimal.ZERO;
+    BigDecimal totalDebetOutAll = BigDecimal.ZERO;
+    BigDecimal totalCredetOutAll = BigDecimal.ZERO;
 
         for (HouseDTO house : houses) {
             int houseId = house.getHouseId();
@@ -82,16 +82,16 @@ public class PdfReportAccountsService {
             for (String h : headers) table.addCell(makeChargeHeader(h));
             table.setHeaderRows(1);
 
-            // === Локальные суммы ===
-            BigDecimal sumDebetIn = BigDecimal.ZERO;
-            BigDecimal sumCredetIn = BigDecimal.ZERO;
-            BigDecimal sumCharged = BigDecimal.ZERO;
-            BigDecimal sumTaxIn = BigDecimal.ZERO;
-            BigDecimal sumPaid = BigDecimal.ZERO;
-            BigDecimal sumRemoval = BigDecimal.ZERO;
-            BigDecimal sumDebetOut = BigDecimal.ZERO;
-            BigDecimal sumCredetOut = BigDecimal.ZERO;
-            BigDecimal sumLateFee = BigDecimal.ZERO;
+        // === Локальные суммы ===
+        BigDecimal sumDebetIn = BigDecimal.ZERO;
+        BigDecimal sumCredetIn = BigDecimal.ZERO;
+        BigDecimal sumCharged = BigDecimal.ZERO;
+        BigDecimal sumTaxIn = BigDecimal.ZERO;
+        BigDecimal sumPaid = BigDecimal.ZERO;
+        BigDecimal sumRemoval = BigDecimal.ZERO;
+        BigDecimal sumLateFee = BigDecimal.ZERO;
+        BigDecimal sumDebetOut = BigDecimal.ZERO;
+        BigDecimal sumCredetOut = BigDecimal.ZERO;
 
             for (ReportRowDTO row : rows) {
                 table.addCell(makeChargeDataInfo(String.valueOf(row.getFlat())));
@@ -160,9 +160,9 @@ public class PdfReportAccountsService {
         document.add(totalTitle);
         document.add(new Paragraph("\n"));
 
-        PdfPTable totalTable = new PdfPTable(8);
+        PdfPTable totalTable = new PdfPTable(9);
         totalTable.setWidthPercentage(100);
-        totalTable.setWidths(new float[]{5f,5f,5f,5f,5f,5f,5f,5f});
+        totalTable.setWidths(new float[]{5f,5f,5f,5f,5f,5f,5f,5f,5f});
 
         String[] totalHeaders = {"Дебет нач.","Кредит нач.","Начислено","Налог 3%",
                 "Оплачено","Субсидии","Пеня","Дебет кон.","Кредит кон."};
@@ -225,6 +225,7 @@ public void generatePrivateReport(
     BigDecimal totalTaxAll = BigDecimal.ZERO;
     BigDecimal totalPaidAll = BigDecimal.ZERO;
     BigDecimal totalRemovalAll = BigDecimal.ZERO;
+    BigDecimal totalLateFee = BigDecimal.ZERO;
     BigDecimal totalDebetOutAll = BigDecimal.ZERO;
     BigDecimal totalCredetOutAll = BigDecimal.ZERO;
 
@@ -259,6 +260,7 @@ public void generatePrivateReport(
         BigDecimal sumTaxIn = BigDecimal.ZERO;
         BigDecimal sumPaid = BigDecimal.ZERO;
         BigDecimal sumRemoval = BigDecimal.ZERO;
+        BigDecimal sumLateFee = BigDecimal.ZERO;
         BigDecimal sumDebetOut = BigDecimal.ZERO;
         BigDecimal sumCredetOut = BigDecimal.ZERO;
 
@@ -284,6 +286,7 @@ public void generatePrivateReport(
             sumTaxIn = sumTaxIn.add(nvl(row.getTaxIn()));
             sumPaid = sumPaid.add(nvl(row.getPaydIn()));
             sumRemoval = sumRemoval.add(nvl(row.getSubsidy()));
+            sumLateFee = sumLateFee.add(nvl(row.getLateFee()));
             sumDebetOut = sumDebetOut.add(nvl(row.getDebetOut()));
             sumCredetOut = sumCredetOut.add(nvl(row.getCredetOut()));
         }
@@ -301,6 +304,7 @@ public void generatePrivateReport(
         table.addCell(makeTotalCell(sumTaxIn));
         table.addCell(makeTotalCell(sumPaid));
         table.addCell(makeTotalCell(sumRemoval));
+        table.addCell(makeTotalCell(sumLateFee));
         table.addCell(makeTotalCell(sumDebetOut));
         table.addCell(makeTotalCell(sumCredetOut));
 
@@ -314,6 +318,7 @@ public void generatePrivateReport(
         totalTaxAll = totalTaxAll.add(sumTaxIn);
         totalPaidAll = totalPaidAll.add(sumPaid);
         totalRemovalAll = totalRemovalAll.add(sumRemoval);
+        totalLateFee = totalLateFee.add(sumLateFee);
         totalDebetOutAll = totalDebetOutAll.add(sumDebetOut);
         totalCredetOutAll = totalCredetOutAll.add(sumCredetOut);
     }
@@ -326,12 +331,12 @@ public void generatePrivateReport(
     document.add(totalTitle);
     document.add(new Paragraph("\n"));
 
-    PdfPTable totalTable = new PdfPTable(8);
+    PdfPTable totalTable = new PdfPTable(9);
     totalTable.setWidthPercentage(100);
-    totalTable.setWidths(new float[]{5f,5f,5f,5f,5f,5f,5f,5f});
+    totalTable.setWidths(new float[]{5f,5f,5f,5f,5f,5f,5f,5f,5f});
 
     String[] totalHeaders = {"Дебет нач.","Кредит нач.","Начислено","Налог 3%",
-            "Оплачено","Субсидии","Дебет кон.","Кредит кон."};
+            "Оплачено","Субсидии","Пеня","Дебет кон.","Кредит кон."};
     for (String h : totalHeaders) totalTable.addCell(makeChargeHeader(h));
 
     totalTable.addCell(makeTotalCell(totalDebetInAll));
@@ -340,6 +345,7 @@ public void generatePrivateReport(
     totalTable.addCell(makeTotalCell(totalTaxAll));
     totalTable.addCell(makeTotalCell(totalPaidAll));
     totalTable.addCell(makeTotalCell(totalRemovalAll));
+    totalTable.addCell(makeTotalCell(totalLateFee));
     totalTable.addCell(makeTotalCell(totalDebetOutAll));
     totalTable.addCell(makeTotalCell(totalCredetOutAll));
 
