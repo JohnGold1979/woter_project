@@ -62,6 +62,7 @@
     </div>
 </div>
 
+
 <!-- Основное рабочее окно -->
 <div class="d-flex flex-grow-1">
     <!-- Левое меню -->
@@ -117,6 +118,20 @@
 
     <!-- Контент с двумя таблицами -->
     <div class="flex-grow-1 p-2">
+        <!-- Поиск -->
+        <div class="bg-white border-bottom p-2">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label small">Лицевой счёт</label>
+                    <input type="text" id="searchAccount" class="form-control form-control-sm" placeholder="pers_account">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small">ФИО</label>
+                    <input type="text" id="searchName" class="form-control form-control-sm" placeholder="client_name">
+                </div>
+            </div>
+        </div>
+
         <div class="row g-2">
             <div class="col-md-6 d-flex flex-column">
                 <div class="card shadow-sm h-100">
@@ -152,11 +167,13 @@
             <div class="col-md-6 d-flex flex-column">
                 <div class="card shadow-sm h-100">
             <div class="card-header bg-white border-bottom fw-bold">
-                <i class="fa-solid fa-gauge me-2 text-danger"></i>Показания
-                <span id="selectedClientInfo" class="ms-auto text-info small"></span>
-                <div id="indicationsHeader" class="mt-1 small text-muted" style="display:none;">
-                    <span id="headerPersAcc" class="me-3"></span>
-                    <span id="headerClName"></span>
+                <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-gauge me-2 text-danger"></i>
+                    <span>Показания</span>
+                    <div id="indicationsHeader" class="ms-auto d-flex align-items-center gap-3" style="display:none;">
+                        <span class="badge bg-primary" id="headerPersAcc"></span>
+                        <span class="text-dark small fw-bold" id="headerClName"></span>
+                    </div>
                 </div>
             </div>
                     <div class="card-body p-0">
@@ -385,6 +402,26 @@
 <script src="/js/bootstrap.bundle.min.js"></script>
 <script src="/js/indication.js"></script>
 <script>
+    // Search functionality - inline like saldo.html
+    (function(){
+        const accountInput = document.getElementById('searchAccount');
+        const nameInput = document.getElementById('searchName');
+        const table = document.querySelector('#clientsTab tbody');
+        if (!table || !accountInput || !nameInput) return;
+
+        function filter(){
+            let accVal = accountInput.value.toLowerCase();
+            let nameVal = nameInput.value.toLowerCase();
+            Array.from(table.rows).forEach(row => {
+                let acc = (row.cells[2]?.textContent || '').toLowerCase();
+                let name = (row.cells[1]?.textContent || '').toLowerCase();
+                row.style.display = ((acc.includes(accVal) || accVal==='') && (name.includes(nameVal) || nameVal==='')) ? '' : 'none';
+            });
+        }
+        accountInput.addEventListener('input', filter);
+        nameInput.addEventListener('input', filter);
+    })();
+
     async function loadRecentEvents() {
         try {
             const resp = await fetch('/api/events/recent');

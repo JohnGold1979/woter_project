@@ -393,8 +393,8 @@
                             <input type="text" class="form-control" id="clNameEditAdd" name="clNameEditAdd">
                         </div>
 
-                        <!-- Улица -->
-                        <div class="col-md-8">
+                        <!-- Население: Улица -->
+                        <div class="col-md-8" id="streetField">
                             <label for="selectStreet" class="form-label">Улица</label>
                             <select id="selectStreet" class="form-select" name="streetId">
                                 <option value="">Выберите улицу</option>
@@ -404,10 +404,12 @@
                             </select>
                         </div>
 
-                        <!-- Дом -->
-                        <div class="col-md-4">
-                            <label for="house" class="form-label">Дом</label>
-                            <input type="text" class="form-control" id="house" name="house" placeholder="10А">
+                        <!-- Квартирный: Дом (выпадающий) -->
+                        <div class="col-md-8 d-none" id="houseField">
+                            <label for="selectHouse" class="form-label">Дом</label>
+                            <select id="selectHouse" class="form-select" name="houseId">
+                                <option value="">Выберите дом</option>
+                            </select>
                         </div>
 
                         <!-- Квартира -->
@@ -440,6 +442,10 @@
                                 <label class="form-check-label" for="typePrivate">Частный</label>
                             </div>
                         </div>
+
+                        <!-- Скрытые поля для отправки -->
+                        <input type="hidden" id="hiddenStreetId" name="streetId">
+                        <input type="hidden" id="hiddenHouseId" name="houseId">
 
                         <!-- Радио: водомер -->
                         <div class="col-md-6">
@@ -475,6 +481,75 @@ function openReceipt(account) {
     const year = document.getElementById('yearSelect').value;
     window.open('/print/single?persAcc=' + encodeURIComponent(account) + '&month=' + month + '&year=' + year, '_blank');
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const typeFlatRadio = document.getElementById('typeFlat');
+    const typePrivateRadio = document.getElementById('typePrivate');
+    const streetField = document.getElementById('streetField');
+    const houseField = document.getElementById('houseField');
+    const selectStreet = document.getElementById('selectStreet');
+    const selectHouse = document.getElementById('selectHouse');
+    const hiddenStreetId = document.getElementById('hiddenStreetId');
+    const hiddenHouseId = document.getElementById('hiddenHouseId');
+
+    function updateClientFields() {
+        if (typeFlatRadio.checked) {
+            streetField.classList.add('d-none');
+            houseField.classList.remove('d-none');
+        } else {
+            streetField.classList.remove('d-none');
+            houseField.classList.add('d-none');
+        }
+    }
+
+    typeFlatRadio.addEventListener('change', updateClientFields);
+    typePrivateRadio.addEventListener('change', updateClientFields);
+
+    updateClientFields();
+
+    let allHouses = [];
+    fetch('/dictionary/list/houses')
+        .then(r => r.json())
+        .then(data => {
+            allHouses = data || [];
+        })
+        .catch(err => console.error('Ошибка загрузки домов', err));
+
+    function refreshHouseOptions(streetId) {
+        selectHouse.innerHTML = '<option value="">Выберите дом</option>';
+        if (!streetId) return;
+        const items = allHouses.filter(h => String(h.streetId) === String(streetId));
+        items.forEach(h => {
+            const opt = document.createElement('option');
+            opt.value = h.houseId;
+            opt.textContent = h.houseName || h.house || ('Дом ' + h.houseId);
+            selectHouse.appendChild(opt);
+        });
+    }
+
+    selectStreet.addEventListener('change', function () {
+        hiddenStreetId.value = this.value || '';
+        refreshHouseOptions(this.value);
+    });
+
+    selectHouse.addEventListener('change', function () {
+        hiddenHouseId.value = this.value || '';
+    });
+
+    const originalAddEditClientOutline = window.addEditClientOutline;
+    if (typeof originalAddEditClientOutline === 'function') {
+        window.addEditClientOutline = function (account) {
+            originalAddEditClientOutline(account);
+            setTimeout(() => {
+                const streetVal = hiddenStreetId.value || (selectStreet.value || '');
+                refreshHouseOptions(streetVal);
+                if (hiddenHouseId.value) {
+                    selectHouse.value = hiddenHouseId.value;
+                }
+            }, 300);
+        };
+    }
+});
 </script>
 
 </body>

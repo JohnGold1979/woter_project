@@ -40,7 +40,7 @@ public class ClientRepository {
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             ClientDTO dto = new ClientDTO();
-            dto.setId(rs.getObject("id", Long.class));   // ✅ вместо getLong()
+            dto.setId(rs.getObject("id", Long.class));
             dto.setFlat(rs.getString("flat"));
             dto.setPersonalAccount(rs.getString("pers_account"));
             dto.setClientName(rs.getString("client_name"));
@@ -167,7 +167,7 @@ public class ClientRepository {
     }
 
     public List<StationDTO> getSatationsAll() {
-        String sql = """ 
+        String sql = """
                      select s.id station_id, s.station_name
                      from wot_stations s
                      where s.system_id = 2
@@ -190,7 +190,6 @@ public class ClientRepository {
             dto.setTaxRate(rs.getDouble("tax_rate"));
             return dto;
         });
-
     }
 
     public PeriodDTO findLastOpenPeriod() {
@@ -217,27 +216,23 @@ public class ClientRepository {
                 new Object[]{payment.getPersAcc(), payment.getAmount(), payment.getTax()},
                 String.class
         );
-
     }
 
     public String insertPaymentSub(PaymentDTO payment) {
-        System.out.println("Пришло " + payment.getPersAcc());
-        System.out.println("Пришло " + payment.getAmount());
         String sql = "SELECT insert_payment_sub(?, ?)";
         return jdbcTemplate.queryForObject(
                 sql,
                 new Object[]{payment.getPersAcc(), payment.getAmount()},
                 String.class
         );
-
     }
 
     public Long saveClient(java.util.Map<String, Object> data) {
         String sql = """
         INSERT INTO wot_clients (
-            pers_account, 
-            client_name, 
-            client_type_id, 
+            pers_account,
+            client_name,
+            client_type_id,
             counter_in_id,
             cnt_pers,
             cnt_pers_fact,
@@ -259,12 +254,12 @@ public class ClientRepository {
         return jdbcTemplate.queryForObject(
                 sql,
                 new Object[]{
-                    persAcc,
-                    clientName,
-                    clientType,
-                    counterIn,
-                    cntPersons != null ? cntPersons : 0,
-                    cntPersonsFact != null ? cntPersonsFact : 0
+                        persAcc,
+                        clientName,
+                        clientType,
+                        counterIn,
+                        cntPersons != null ? cntPersons : 0,
+                        cntPersonsFact != null ? cntPersonsFact : 0
                 },
                 Long.class
         );
@@ -274,8 +269,8 @@ public class ClientRepository {
         Integer streetId = (Integer) data.get("streetId");
         String house = (String) data.get("house");
         String flat = (String) data.get("flat");
+        Integer clientType = (Integer) data.get("clientType");
 
-        // Получаем station_id из улицы
         Integer stationId = jdbcTemplate.queryForObject(
                 "SELECT station_id FROM wot_streets WHERE id = ?",
                 new Object[]{streetId},
@@ -292,10 +287,34 @@ public class ClientRepository {
             system_id,
             status_id
         )
-        VALUES (?, ?, NULL, ?, ?, 2, 1)
+        VALUES (?, ?, ?, ?, ?, 2, 1)
         """;
 
-        jdbcTemplate.update(sql, clientId, streetId, flat, stationId);
+        if (clientType != null && clientType == 1) {
+            Integer houseId = resolveHouseId(streetId, house, data);
+            jdbcTemplate.update(sql, clientId, null, houseId, flat, stationId);
+        } else {
+            jdbcTemplate.update(sql, clientId, streetId, null, flat, stationId);
+        }
+    }
+
+    private Integer resolveHouseId(Integer streetId, String house, java.util.Map<String, Object> data) {
+        if (data.get("houseId") instanceof Integer hid) {
+            return hid;
+        }
+        if (data.get("houseId") instanceof String sid && !sid.isBlank()) {
+            return Integer.parseInt(sid);
+        }
+        if (streetId != null && house != null && !house.isBlank()) {
+            try {
+                return jdbcTemplate.queryForObject(
+                        "SELECT id FROM wot_houses WHERE street_id = ? AND house = ?",
+                        new Object[]{streetId, house},
+                        Integer.class
+                );
+            } catch (Exception ignored) {}
+        }
+        return null;
     }
 
     public void updateClient(java.util.Map<String, Object> data) {
@@ -309,7 +328,6 @@ public class ClientRepository {
         String house = (String) data.get("house");
         String flat = (String) data.get("flat");
 
-        // Обновляем данные клиента
         String sql = """
         UPDATE wot_clients
         SET client_name = ?,
@@ -323,7 +341,6 @@ public class ClientRepository {
         jdbcTemplate.update(sql, clientName, clientType, counterIn,
                 cntPersons, cntPersonsFact, persAcc);
 
-        // Проверяем есть ли адрес
         Integer addressCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM wot_address WHERE client_id = (SELECT id FROM wot_clients WHERE pers_account = ?)",
                 new Object[]{persAcc},
@@ -337,27 +354,55 @@ public class ClientRepository {
         );
 
         if (addressCount > 0) {
-            // Обновляем адрес
-            String updateAddress = """
-            UPDATE wot_address
-            SET street_id = ?,
-                flat = ?,
-                station_id = ?
-            WHERE client_id = (SELECT id FROM wot_clients WHERE pers_account = ?)
-            """;
-            jdbcTemplate.update(updateAddress, streetId, flat, stationId, persAcc);
+            String updateAddress;
+            if (clientType != null && clientType == 1) {
+                Integer houseId = resolveHouseId(streetId, house, data);
+                updateAddress = """
+                UPDATE wot_address
+                SET house_id = ?,
+                    street_id = NULL,
+                    flat = ?,
+                    station_id = ?
+                WHERE client_id = (SELECT id FROM wot_clients WHERE pers_account = ?)
+                """;
+                jdbcTemplate.update(updateAddress, houseId, flat, stationId, persAcc);
+            } else {
+                updateAddress = """
+                UPDATE wot_address
+                SET street_id = ?,
+                    house_id = NULL,
+                    flat = ?,
+                    station_id = ?
+                WHERE client_id = (SELECT id FROM wot_clients WHERE pers_account = ?)
+                """;
+                jdbcTemplate.update(updateAddress, streetId, flat, stationId, persAcc);
+            }
         } else {
-            // Создаём адрес
-            String insertAddress = """
-            INSERT INTO wot_address (
-                client_id, street_id, house_id, flat, station_id, system_id, status_id
-            )
-            VALUES (
-                (SELECT id FROM wot_clients WHERE pers_account = ?),
-                ?, NULL, ?, ?, 2, 1
-            )
-            """;
-            jdbcTemplate.update(insertAddress, persAcc, streetId, flat, stationId);
+            String insertAddress;
+            if (clientType != null && clientType == 1) {
+                Integer houseId = resolveHouseId(streetId, house, data);
+                insertAddress = """
+                INSERT INTO wot_address (
+                    client_id, street_id, house_id, flat, station_id, system_id, status_id
+                )
+                VALUES (
+                    (SELECT id FROM wot_clients WHERE pers_account = ?),
+                    ?, ?, ?, ?, 2, 1
+                )
+                """;
+                jdbcTemplate.update(insertAddress, persAcc, null, houseId, flat, stationId);
+            } else {
+                insertAddress = """
+                INSERT INTO wot_address (
+                    client_id, street_id, house_id, flat, station_id, system_id, status_id
+                )
+                VALUES (
+                    (SELECT id FROM wot_clients WHERE pers_account = ?),
+                    ?, NULL, ?, ?, 2, 1
+                )
+                """;
+                jdbcTemplate.update(insertAddress, persAcc, streetId, flat, stationId);
+            }
         }
     }
 

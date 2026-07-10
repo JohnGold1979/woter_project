@@ -197,11 +197,13 @@ document.querySelector("table").addEventListener("click", function (event) {
         return;
     }
 
+    const hiddenStreetId = document.getElementById('hiddenStreetId');
+    const hiddenHouseId = document.getElementById('hiddenHouseId');
     const clientData = {
         personalAccount: persAcc,
         clientName: clientName,
-        streetId: parseInt(streetId),
-        house: house,
+        streetId: hiddenStreetId && hiddenStreetId.value ? parseInt(hiddenStreetId.value) : (streetId ? parseInt(streetId) : null),
+        houseId: hiddenHouseId && hiddenHouseId.value ? parseInt(hiddenHouseId.value) : null,
         flat: flat,
         cntPersons: cntPersons ? parseInt(cntPersons) : null,
         cntPersonsFact: cntPersonsFact ? parseInt(cntPersonsFact) : null,
@@ -343,11 +345,25 @@ function addEditClientOutline(account) {
           console.log("Данные клиента:", clientData);
           console.log("Список улиц:", streets);
 
-          // Заполняем основные поля
-          document.getElementById("persAccEditAdd").value = clientData.personalAccount || "";
-          document.getElementById("clNameEditAdd").value = clientData.clientName || "";
-          document.getElementById("house").value = clientData.house || "";
-          document.getElementById("flat").value = clientData.flat || "";
+    // Заполняем основные поля
+    document.getElementById("persAccEditAdd").value = clientData.personalAccount || "";
+    document.getElementById("clNameEditAdd").value = clientData.clientName || "";
+
+    // Определяем тип клиента и показываем нужные поля
+    const clientType = clientData.clientType || 1;
+    const typeFlatRadio = document.querySelector('input[name="clientType"][value="1"]');
+    const typePrivateRadio = document.querySelector('input[name="clientType"][value="2"]');
+    if (clientType == 1) {
+        typeFlatRadio.checked = true;
+        document.getElementById('streetField').classList.add('d-none');
+        document.getElementById('houseField').classList.remove('d-none');
+    } else {
+        typePrivateRadio.checked = true;
+        document.getElementById('streetField').classList.remove('d-none');
+        document.getElementById('houseField').classList.add('d-none');
+    }
+
+    document.getElementById("flat").value = clientData.flat || "";
           document.getElementById("cP").value = clientData.cntPers ?? "";
           document.getElementById("cPF").value = clientData.cntPersFact ?? "";
 
