@@ -465,7 +465,78 @@ public void generateAllHousesReport(
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-public void generateAllStreetsReport(
+    public void generateCountersReport(
+            List<CounterReportDTO> counters,
+            int month,
+            int year,
+            OutputStream out
+    ) throws DocumentException {
+
+        Document document = new Document(PageSize.A4.rotate(), 30, 30, 60, 30);
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+
+        String period = String.format("%02d.%d", month, year);
+        writer.setPageEvent(new HeaderFooterPageEvent(
+                "ОТЧЁТ ПО ВОДОМЕРАМ (за период " + period + ")",
+                period
+        ));
+        document.open();
+
+        Font titleFont = new Font(Font.HELVETICA, 14, Font.BOLD);
+
+        PdfPTable table = new PdfPTable(7);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{3f, 12f, 4f, 5f, 5f, 5f, 5f});
+
+        String[] headers = {
+                "Лицевой счёт",
+                "ФИО / Адрес",
+                "Тип",
+                "Показание",
+                "м³",
+                "Сумма",
+                "Дата"
+        };
+        for (String h : headers) {
+            table.addCell(makeChargeHeader(h));
+        }
+        table.setHeaderRows(1);
+
+        BigDecimal totalM3 = BigDecimal.ZERO;
+        BigDecimal totalSumma = BigDecimal.ZERO;
+        int totalCount = 0;
+
+        for (CounterReportDTO row : counters) {
+            String clientType = row.getClientType();
+            String typeLabel = "1".equals(clientType) ? "Кварт." : "Част.";
+
+            table.addCell(makeChargeDataInfo(row.getPersAccount()));
+            table.addCell(makeChargeDataInfo(row.getClientName() + "\n" + (row.getAddress() != null ? row.getAddress() : "")));
+            table.addCell(makeChargeData(typeLabel));
+            table.addCell(makeChargeData(toStr(row.getIndication())));
+            table.addCell(makeChargeData(toStr(row.getM3())));
+            table.addCell(makeChargeData(toStr(row.getSumma())));
+            table.addCell(makeChargeData(""));
+
+            totalM3 = totalM3.add(nvl(row.getM3()));
+            totalSumma = totalSumma.add(nvl(row.getSumma()));
+            totalCount++;
+        }
+
+        Paragraph totalLine = new Paragraph(
+                "Итого: " + totalCount + " абонентов | м³: " + toStr(totalM3) +
+                " | Сумма: " + toStr2(totalSumma),
+                new Font(Font.HELVETICA, 10, Font.BOLD)
+        );
+        totalLine.setAlignment(Element.ALIGN_RIGHT);
+        totalLine.setSpacingBefore(10f);
+
+        document.add(table);
+        document.add(totalLine);
+        document.close();
+    }
+
+    public void generateAllStreetsReport(
         int month,
         int year,
         ReportAccountsService reportService,

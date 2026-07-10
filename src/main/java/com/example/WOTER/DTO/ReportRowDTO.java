@@ -21,9 +21,8 @@ public class ReportRowDTO {
     private BigDecimal subsidy;
 
     private BigDecimal lateFee;
+    private String clientType;
 
-
-    // Конструктор для агрегированных отчётов
     public ReportRowDTO(String flat, String persAccount,String clientName,String address, BigDecimal debetIn, BigDecimal credetIn, BigDecimal chargedMoney,
                         BigDecimal taxIn, BigDecimal paydIn, BigDecimal taxOut,
                         BigDecimal removalIn, BigDecimal remTaxIn, BigDecimal debetOut,
@@ -44,7 +43,6 @@ public class ReportRowDTO {
         this.credetOut = credetOut;
         this.subsidy = subsidy;
         this.lateFee = lateFee;
-
     }
 
 
@@ -94,4 +92,7 @@ public class ReportRowDTO {
 
     public BigDecimal getLateFee() { return lateFee; }
     public void setLateFee(BigDecimal lateFee) { this.subsidy = lateFee; }
+
+    public String getClientType() { return clientType; }
+    public void setClientType(String clientType) { this.clientType = clientType; }
 }

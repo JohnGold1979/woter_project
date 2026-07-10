@@ -1,7 +1,9 @@
 package com.example.WOTER.Controllers;
 
+import com.example.WOTER.DTO.CounterReportDTO;
 import com.example.WOTER.DTO.DislocationDTO;
 import com.example.WOTER.DTO.HouseDTO;
+import com.example.WOTER.DTO.ReportRowDTO;
 import com.example.WOTER.DTO.StreetDTO;
 import com.example.WOTER.Services.PdfReportAccountsService;
 import com.example.WOTER.Services.ReportAccountsService;
@@ -143,6 +145,26 @@ public class ReportAccountsController {
             
             pdfService.generateDislocationReport(allData, month, year, "Дома (квартирный сектор) + Улицы (частный сектор)", out);
 
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @GetMapping("/report/counters")
+    public void reportCounters(
+            @RequestParam int month,
+            @RequestParam int year,
+            HttpServletResponse response
+    ) throws IOException, DocumentException {
+        response.setContentType("application/pdf");
+        response.setHeader(
+                "Content-Disposition",
+                "inline; filename=report_counters_" + month + "_" + year + ".pdf"
+        );
+
+        try (var out = response.getOutputStream()) {
+            List<CounterReportDTO> counters = reportService.getCounterReport(month, year);
+            pdfService.generateCountersReport(counters, month, year, out);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

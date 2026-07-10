@@ -290,8 +290,7 @@ public List<PayAllReportDTO> getPayAllReport(int montId, int yearId) {
 
     public List<DislocationDTO> getDislocationByStreets(int month, int year) {
         String sql = """
-            SELECT s.street_name as name,
-                   COALESCE(SUM(wc.cnt_pers), 0) as peopleCount
+            SELECT s.street_name as name, COALESCE(SUM(wc.cnt_pers), 0) as peopleCount
             FROM wot_streets s
             LEFT JOIN wot_address a ON a.street_id = s.id
             LEFT JOIN wot_clients wc ON wc.id = a.client_id
@@ -307,6 +306,55 @@ public List<PayAllReportDTO> getPayAllReport(int montId, int yearId) {
         """;
         return jdbcTemplate.query(sql, new Object[]{month, year}, (rs, rowNum) ->
                 new DislocationDTO(rs.getString("name"), rs.getInt("peopleCount"))
+        );
+    }
+
+    public List<CounterReportDTO> getCounterReport(int month, int year) {
+        String sql = """
+            SELECT 
+                wc.pers_account as persAccount,
+                wc.client_name as clientName,
+                CASE
+                    WHEN wa.street_id IS NULL THEN
+                        s2.street_name || ' ' || h.house || ' кв. ' || wa.flat
+                    ELSE
+                        s.street_name || ' д. ' || wa.flat
+                END as address,
+                wc.client_type_id as clientType,
+                (select indication from wot_clients_counters_ind wi2 
+                 where wi2.client_id = wc.id 
+                   and wi2.month_id = ?
+                   and wi2.year_id = ?) as indication,
+                (select m3 from wot_clients_counters_ind wi3
+                 where wi3.client_id = wc.id 
+                   and wi3.month_id = ?
+                   and wi3.year_id = ?) as m3,
+                (select summa from wot_clients_counters_ind wi7
+                 where wi7.client_id = wc.id 
+                   and wi7.month_id = ?
+                   and wi7.year_id = ?) as summa
+            FROM wot_clients wc
+            LEFT JOIN wot_address wa ON wa.client_id = wc.id
+            LEFT JOIN wot_streets s ON s.id = wa.street_id
+            LEFT JOIN wot_houses h ON h.id = wa.house_id
+            LEFT JOIN wot_streets s2 ON s2.id = h.street_id
+            WHERE wc.system_id = 1
+              AND wc.counter_in_id = 1
+              AND wc.status_id = 1
+              AND wc.client_type_id IN (1, 2)
+            ORDER BY wc.client_type_id, wc.pers_account
+        """;
+
+        return jdbcTemplate.query(sql, new Object[]{month, year, month, year, month, year}, (rs, rowNum) ->
+                new CounterReportDTO(
+                        rs.getString("persAccount"),
+                        rs.getString("clientName"),
+                        rs.getString("address"),
+                        rs.getString("clientType"),
+                        rs.getBigDecimal("indication"),
+                        rs.getBigDecimal("m3"),
+                        rs.getBigDecimal("summa")
+                )
         );
     }
 
